@@ -1,3 +1,5 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +7,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {
@@ -13,7 +15,7 @@
     font-family: 'Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, sans-serif;
     background-image: radial-gradient(circle at 1px 1px, rgba(33,26,18,0.05) 1px, transparent 0);
     background-size: 22px 22px;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   ::selection {
@@ -41,8 +43,39 @@
   }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes micPulse {
+  0% { box-shadow: 0 0 0 0 rgba(36, 86, 77, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(36, 86, 77, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(36, 86, 77, 0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.25s ease-out forwards;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #FAF7F0 25%, #F2EDE1 50%, #FAF7F0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.animate-shake {
+  animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.animate-mic-pulse {
+  animation: micPulse 1.5s infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -53,14 +86,27 @@
   }
 }
 
-/* Hides the scrollbar on horizontally-scrollable strips (e.g. the desktop
-   nav when it runs out of room) while keeping the element scrollable. */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.glass-card {
+  background: rgba(255, 253, 248, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(33, 26, 18, 0.08);
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+
+.glass-nav {
+  background: rgba(251, 246, 234, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(33, 26, 18, 0.08);
+}
+
+.glow-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glow-hover:hover {
+  box-shadow: 0 12px 32px -8px rgba(36, 86, 77, 0.25), 0 4px 12px -2px rgba(33, 26, 18, 0.06);
+  border-color: rgba(47, 110, 99, 0.35);
+  transform: translateY(-2px);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -127,12 +173,51 @@
 
 /* Custom styling for Leaflet popups */
 .custom-leaflet-popup .leaflet-popup-content-wrapper {
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   padding: 0.25rem;
   background: #FFFDF8;
   box-shadow: 0 10px 25px -5px rgba(33,26,18,0.15), 0 8px 10px -6px rgba(33,26,18,0.1);
+  border: 1px solid rgba(33,26,18,0.08);
 }
 
 .custom-leaflet-popup .leaflet-popup-tip {
   background-color: #FFFDF8;
 }
+
+/* Premium Visual Elements */
+
+/* Ink Stamp texture effect using masking / opacity steps */
+.ink-stamp-effect {
+  position: relative;
+  display: inline-block;
+  opacity: 0.92;
+  mix-blend-mode: multiply;
+  filter: contrast(1.2) brightness(0.95);
+}
+
+/* Double rule ledger border */
+.ledger-double-border {
+  border-bottom: 3px double rgba(33, 26, 18, 0.15);
+}
+
+/* Subtle hand-drawn border effect for tactile paper feel */
+.tactile-border {
+  border: 1px solid rgba(33, 26, 18, 0.12);
+  box-shadow: 0 2px 4px rgba(33, 26, 18, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Shadow transitions */
+.shadow-transition {
+  transition: border-color 0.2s ease, box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-active-press:active {
+  transform: scale(0.97);
+}
+
+/* Custom background paper-grain wrapper */
+.paper-bg-texture {
+  background-image: radial-gradient(circle at 1px 1px, rgba(33,26,18,0.035) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+

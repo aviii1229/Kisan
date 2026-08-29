@@ -40,6 +40,7 @@ export const AdminDashboard: React.FC = () => {
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
     centres.length > 0 ? centres[0].id : 'PPC-TS-01'
   );
+  const [isCallingNext, setIsCallingNext] = useState<boolean>(false);
 
   // Status edit state
   const [customReason, setCustomReason] = useState<string>('');
@@ -297,11 +298,22 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <button
-            onClick={handleCallNext}
-            className="mt-6 w-full py-3.5 px-4 rounded-2xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-extrabold text-sm sm:text-base shadow-xl transition flex items-center justify-center space-x-2 cursor-pointer transform active:scale-95"
+            onClick={async () => {
+              setIsCallingNext(true);
+              await handleCallNext();
+              setTimeout(() => setIsCallingNext(false), 800);
+            }}
+            disabled={isCallingNext}
+            className={`mt-6 w-full py-3.5 px-4 rounded-2xl bg-slate-950 hover:bg-slate-900 text-amber-300 font-extrabold text-sm sm:text-base shadow-xl transition-all btn-active-press flex items-center justify-center space-x-2 cursor-pointer ${
+              isCallingNext ? 'animate-pulse ring-4 ring-amber-400/50' : ''
+            }`}
           >
-            <Volume2 className="w-5 h-5 text-amber-400 animate-pulse" />
-            <span>{t('callNextTokenBtn')}</span>
+            {isCallingNext ? (
+              <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Volume2 className="w-5 h-5 text-amber-400 animate-pulse" />
+            )}
+            <span>{isCallingNext ? 'Calling Token...' : t('callNextTokenBtn')}</span>
           </button>
         </div>
       </div>

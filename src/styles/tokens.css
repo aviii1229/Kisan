@@ -1,0 +1,62 @@
+:root {
+  /* Design Tokens - Kisan Setu System */
+  
+  /* Palette Foundations */
+  --color-paper: #FBF6EA;
+  --color-paper-card: #FFFDF8;
+  --color-ink: #211A12;
+
+  /* Primary Brand (Teal Indigo Stamp) */
+  --color-agri-50: #EFF4F2;
+  --color-agri-100: #DCE8E4;
+  --color-agri-500: #2F6E63;
+  --color-agri-600: #24564D;
+  --color-agri-700: #1C443D;
+  --color-agri-900: #0F2521;
+
+  /* Accent (Turmeric Gold) */
+  --color-amber-50: #FFF8E7;
+  --color-amber-100: #FEEBBE;
+  --color-amber-500: #D6900F;
+  --color-amber-600: #AD730B;
+  --color-amber-900: #452D06;
+
+  /* Muted Paddy Green (Open State) */
+  --color-emerald-50: #F1F7EC;
+  --color-emerald-100: #DFEDD1;
+  --color-emerald-500: #558A36;
+  --color-emerald-600: #436E2A;
+  --color-emerald-900: #1B2C10;
+
+  /* Unglazed Terracotta Red (Closed / Alerts) */
+  --color-clay-50: #FDF1EC;
+  --color-clay-100: #FADCCE;
+  --color-clay-500: #BD4F2E;
+  --color-clay-600: #993D22;
+  --color-clay-900: #3D180E;
+
+  /* Status Tokens (High-Contrast WCAG AA Compliant) */
+  --status-open-bg: #DFEDD1;
+  --status-open-text: #1B2C10;
+  --status-open-border: #97C378;
+
+  --status-closed-bg: #FADCCE;
+  --status-closed-text: #3D180E;
+  --status-closed-border: #E7906D;
+
+  --status-break-bg: #FEEBBE;
+  --status-break-text: #2B1C04;
+  --status-break-border: #F9C34D;
+
+  --status-quota-bg: #DCE8E4;
+  --status-quota-text: #081511;
+  --status-quota-border: #8EB4A9;
+
+  /* Standardized Border Radii */
+  --radius-chip: 0.5rem;
+  --radius-badge: 9999px;
+  --radius-input: 0.75rem;
+  --radius-btn: 0.75rem;
+  --radius-card: 1.25rem;
+  --radius-modal: 1.5rem;
+}

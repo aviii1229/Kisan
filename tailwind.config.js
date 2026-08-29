@@ -12,8 +12,7 @@ export default {
         paper: '#FBF6EA',
         ink: '#211A12',
 
-        // Primary brand — "ledger indigo", the deep blue-teal of an official stamp,
-        // replacing the generic bright-green SaaS default.
+        // Primary brand — "ledger indigo", deep blue-teal of an official stamp.
         agri: {
           50: '#EFF4F2',
           100: '#DCE8E4',
@@ -28,9 +27,7 @@ export default {
           950: '#081511',
         },
 
-        // Accent — turmeric gold (Nizamabad turmeric is one of the crops on the
-        // platform), overriding Tailwind's default amber so every amber-* class
-        // in the app inherits it automatically.
+        // Accent — turmeric gold (Nizamabad turmeric).
         amber: {
           50: '#FFF8E7',
           100: '#FEEBBE',
@@ -45,7 +42,7 @@ export default {
           950: '#2B1C04',
         },
 
-        // Success / "open" state — muted paddy green, overriding default emerald.
+        // Success / "open" state — muted paddy green.
         emerald: {
           50: '#F1F7EC',
           100: '#DFEDD1',
@@ -60,9 +57,7 @@ export default {
           950: '#0F1A09',
         },
 
-        // Neutral text/border scale — warm stone instead of cool clinical slate,
-        // overriding default slate so every slate-* class already in the app
-        // inherits it automatically.
+        // Neutral text/border scale — warm stone.
         slate: {
           50: '#FAF7F0',
           100: '#F2EDE1',
@@ -90,20 +85,70 @@ export default {
           800: '#5A2415',
           900: '#3D180E',
         },
+
+        // High-contrast semantic status tokens (WCAG AA compliant)
+        status: {
+          open: {
+            bg: '#DFEDD1',
+            text: '#1B2C10',
+            border: '#97C378',
+          },
+          closed: {
+            bg: '#FADCCE',
+            text: '#3D180E',
+            border: '#E7906D',
+          },
+          break: {
+            bg: '#FEEBBE',
+            text: '#2B1C04',
+            border: '#F9C34D',
+          },
+          quota: {
+            bg: '#DCE8E4',
+            text: '#081511',
+            border: '#8EB4A9',
+          },
+        },
+      },
+      borderRadius: {
+        chip: '0.5rem',     // 8px
+        badge: '9999px',   // pill
+        input: '0.75rem',   // 12px
+        btn: '0.75rem',     // 12px
+        card: '1.25rem',    // 20px
+        modal: '1.5rem',    // 24px
+      },
+      fontSize: {
+        'display-lg': ['2.25rem', { lineHeight: '2.5rem', fontWeight: '800' }],
+        'display-md': ['1.75rem', { lineHeight: '2.125rem', fontWeight: '700' }],
+        'heading-lg': ['1.375rem', { lineHeight: '1.75rem', fontWeight: '700' }],
+        'heading-md': ['1.125rem', { lineHeight: '1.5rem', fontWeight: '700' }],
+        'body-lg': ['1.125rem', { lineHeight: '1.625rem', fontWeight: '500' }],
+        'body-base': ['1rem', { lineHeight: '1.5rem', fontWeight: '500' }], // Min 16px for outdoor readability
+        'caption-sm': ['0.8125rem', { lineHeight: '1.125rem', fontWeight: '600' }],
+        'micro': ['0.6875rem', { lineHeight: '0.875rem', fontWeight: '700' }],
       },
       fontFamily: {
-        sans: ['Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Fraunces', 'Noto Sans Telugu', 'Noto Sans Devanagari', 'Georgia', 'serif'],
+        sans: ['"Plus Jakarta Sans"', 'Outfit', 'Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Fraunces', 'Outfit', 'Noto Sans Telugu', 'Noto Sans Devanagari', 'Georgia', 'serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       boxShadow: {
         xs: '0 1px 2px 0 rgba(33, 26, 18, 0.06)',
-        card: '0 1px 2px rgba(33,26,18,0.04), 0 8px 24px -12px rgba(33,26,18,0.18)',
+        paper: '0 1px 2px rgba(33,26,18,0.04)',
+        card: '0 2px 8px -2px rgba(33,26,18,0.08), 0 12px 32px -16px rgba(33,26,18,0.16)',
+        'card-hover': '0 8px 30px -6px rgba(36, 86, 77, 0.22), 0 4px 12px -2px rgba(33,26,18,0.1)',
+        glow: '0 0 25px -5px rgba(36, 86, 77, 0.35)',
+        'glow-amber': '0 0 25px -5px rgba(214, 144, 15, 0.4)',
         stamp: '0 2px 8px -2px rgba(33,26,18,0.25)',
-        lifted: '0 20px 40px -18px rgba(33,26,18,0.35)',
+        lifted: '0 24px 48px -18px rgba(15, 37, 33, 0.45)',
       },
       backgroundImage: {
         grain: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E\")",
+        'gradient-field': 'linear-gradient(135deg, #1C443D 0%, #15332E 50%, #0F2521 100%)',
+        'gradient-harvest': 'linear-gradient(135deg, #855709 0%, #654208 50%, #452D06 100%)',
+        'gradient-dusk': 'linear-gradient(135deg, #15332E 0%, #251F17 50%, #452D06 100%)',
+        'gradient-app-shell': 'radial-gradient(ellipse at 50% -10%, rgba(47, 110, 99, 0.08) 0%, rgba(251, 246, 234, 0.98) 55%, rgba(214, 144, 15, 0.05) 100%)',
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

@@ -185,7 +185,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         list = list.filter(c => c.name.toLowerCase().includes(q) || c.district.toLowerCase().includes(q));
       }
       if (selectedCrop && selectedCrop !== 'all') {
-        list = list.filter(c => c.acceptedCrops.some(ac => ac.cropId === selectedCrop));
+        list = list.filter(c => c.acceptedCrops.some((ac: any) => ac.cropId === selectedCrop));
       }
       if (selectedDistrict && selectedDistrict !== 'all') {
         list = list.filter(c => c.district.toLowerCase() === selectedDistrict.toLowerCase());
@@ -292,8 +292,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  const refreshAll = useCallback(async () => {
-    setLoading(true);
+  const refreshAll = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     await Promise.all([
       fetchCentres(),
       fetchTokens(),
@@ -301,13 +301,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fetchPrices(),
       fetchAnalytics()
     ]);
-    setLoading(false);
+    if (showLoading) setLoading(false);
   }, [fetchCentres, fetchTokens, fetchAnnouncements, fetchPrices, fetchAnalytics]);
 
-  // Initial load
+  // Initial load once on mount
   useEffect(() => {
-    refreshAll();
-  }, [refreshAll]);
+    refreshAll(true);
+  }, []);
+
+  // Update centres when filters change (without setting global loading state)
+  useEffect(() => {
+    fetchCentres();
+  }, [fetchCentres]);
 
   // Periodic background refresh for live queue
   useEffect(() => {
