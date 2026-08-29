@@ -80,9 +80,38 @@ export function playSuccessSound(): void {
 }
 
 /**
- * Text-To-Speech Narration for illiterates & rural farmers
+ * Text-To-Speech Narration powered by Sarvam AI Indic Bulbul engine (with Web Speech fallback)
  */
-export function speakText(text: string, lang: 'en' | 'te' | 'hi' = 'en'): void {
+export async function speakText(text: string, lang: 'en' | 'te' | 'hi' = 'hi'): Promise<void> {
+  const savedSarvamKey = localStorage.getItem('kisanh_sarvam_api_key');
+
+  // If Sarvam AI API Key is present, attempt natural Indic speech generation via Sarvam Bulbul TTS
+  if (savedSarvamKey) {
+    try {
+      const res = await fetch('/api/sarvam/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-sarvam-api-key': savedSarvamKey
+        },
+        body: JSON.stringify({
+          text,
+          target_language_code: lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN',
+          speaker: 'meera'
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.audioBase64) {
+        const audio = new Audio(`data:audio/wav;base64,${json.audioBase64}`);
+        audio.play();
+        return;
+      }
+    } catch (e) {
+      console.warn('Sarvam AI TTS API call failed, falling back to Web Speech API:', e);
+    }
+  }
+
+  // Fallback to Web Speech API SpeechSynthesis
   if (!('speechSynthesis' in window)) {
     console.warn('Speech synthesis not supported in this browser');
     return;
@@ -91,7 +120,7 @@ export function speakText(text: string, lang: 'en' | 'te' | 'hi' = 'en'): void {
   window.speechSynthesis.cancel(); // Stop ongoing speech
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.9; // Slightly slower for clear comprehension
+  utterance.rate = 0.92; // Slower for clear rural comprehension
   utterance.pitch = 1.0;
 
   if (lang === 'te') {

@@ -360,6 +360,98 @@ app.post('/api/reset', requireAdminPin, (req, res) => {
   }
 });
 
+// --- SARVAM AI HINDI & INDIC VOICE ASSISTANT ENDPOINTS ---
+
+// POST /api/sarvam/tts - Convert Hindi text to natural speech using Sarvam AI (Bulbul)
+app.post('/api/sarvam/tts', async (req, res) => {
+  try {
+    const { text, target_language_code = 'hi-IN', speaker = 'meera' } = req.body;
+    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY;
+
+    if (!apiKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'No Sarvam AI API Key provided. Provide X-Sarvam-Api-Key header or SARVAM_API_KEY env var.'
+      });
+    }
+
+    const sarvamRes = await fetch('https://api.sarvam.ai/text-to-speech', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-subscription-key': apiKey
+      },
+      body: JSON.stringify({
+        inputs: [text],
+        target_language_code,
+        speaker,
+        pitch: 0,
+        pace: 1.05,
+        loudness: 1.5,
+        speech_sample_rate: 16000,
+        enable_preprocessing: true,
+        model: 'bulbul:v1'
+      })
+    });
+
+    const json = await sarvamRes.json();
+    if (!sarvamRes.ok) {
+      return res.status(sarvamRes.status).json({ success: false, message: json.message || 'Sarvam AI TTS Error', error: json });
+    }
+
+    res.json({ success: true, audioBase64: json.audios ? json.audios[0] : null, model: 'bulbul:v1' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/sarvam/stt - Transcribe Hindi audio using Sarvam AI (Saarika)
+app.post('/api/sarvam/stt', async (req, res) => {
+  try {
+    const { audioBase64, language_code = 'hi-IN' } = req.body;
+    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY;
+
+    if (!apiKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'No Sarvam AI API Key provided. Provide X-Sarvam-Api-Key header or SARVAM_API_KEY env var.'
+      });
+    }
+
+    // Convert base64 audio to form-data for Sarvam AI Saarika endpoint
+    const buffer = Buffer.from(audioBase64.replace(/^data:audio\/\w+;base64,/, ''), 'base64');
+    const BlobClass = globalThis.Blob;
+    const FormDataClass = globalThis.FormData;
+
+    if (!FormDataClass) {
+      return res.status(500).json({ success: false, message: 'FormData not available on server' });
+    }
+
+    const form = new FormDataClass();
+    const audioBlob = new BlobClass([buffer], { type: 'audio/wav' });
+    form.append('file', audioBlob, 'speech.wav');
+    form.append('model', 'saarika:v2');
+    form.append('language_code', language_code);
+
+    const sarvamRes = await fetch('https://api.sarvam.ai/speech-to-text', {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': apiKey
+      },
+      body: form
+    });
+
+    const json = await sarvamRes.json();
+    if (!sarvamRes.ok) {
+      return res.status(sarvamRes.status).json({ success: false, message: json.message || 'Sarvam AI STT Error', error: json });
+    }
+
+    res.json({ success: true, transcript: json.transcript, model: 'saarika:v2' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Serve static files from the React dist directory if it exists
 import path from 'path';
 import { fileURLToPath } from 'url';
