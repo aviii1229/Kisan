@@ -83,32 +83,29 @@ export function playSuccessSound(): void {
  * Text-To-Speech Narration powered by Sarvam AI Indic Bulbul engine (with Web Speech fallback)
  */
 export async function speakText(text: string, lang: 'en' | 'te' | 'hi' = 'hi'): Promise<void> {
-  const savedSarvamKey = localStorage.getItem('kisanh_sarvam_api_key');
+  // Attempt natural Indic speech generation via backend Sarvam AI Bulbul TTS (loads key from server .env)
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const savedSarvamKey = localStorage.getItem('kisanh_sarvam_api_key');
+    if (savedSarvamKey) headers['x-sarvam-api-key'] = savedSarvamKey;
 
-  // If Sarvam AI API Key is present, attempt natural Indic speech generation via Sarvam Bulbul TTS
-  if (savedSarvamKey) {
-    try {
-      const res = await fetch('/api/sarvam/tts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-sarvam-api-key': savedSarvamKey
-        },
-        body: JSON.stringify({
-          text,
-          target_language_code: lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN',
-          speaker: 'meera'
-        })
-      });
-      const json = await res.json();
-      if (json.success && json.audioBase64) {
-        const audio = new Audio(`data:audio/wav;base64,${json.audioBase64}`);
-        audio.play();
-        return;
-      }
-    } catch (e) {
-      console.warn('Sarvam AI TTS API call failed, falling back to Web Speech API:', e);
+    const res = await fetch('/api/sarvam/tts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        text,
+        target_language_code: lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN',
+        speaker: 'meera'
+      })
+    });
+    const json = await res.json();
+    if (json.success && json.audioBase64) {
+      const audio = new Audio(`data:audio/wav;base64,${json.audioBase64}`);
+      audio.play();
+      return;
     }
+  } catch (e) {
+    console.warn('Sarvam AI TTS call fallback to browser Web Speech API:', e);
   }
 
   // Fallback to Web Speech API SpeechSynthesis
