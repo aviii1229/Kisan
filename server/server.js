@@ -476,7 +476,7 @@ app.get('*', (req, res, next) => {
 
 // Start Express Server only when run directly (not serverless)
 if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌾 Kisan H API Server running on port ${PORT}`);
     console.log(`📍 Endpoint: http://localhost:${PORT}/api/centres`);
     console.log(`🔐 Officer Portal PIN: ${ADMIN_PIN} (set ADMIN_PIN env var to change)`);
