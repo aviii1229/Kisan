@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply antialiased bg-paper text-ink;
+    font-family: 'Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, sans-serif;
+    background-image: radial-gradient(circle at 1px 1px, rgba(33,26,18,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    @apply bg-amber-300 text-ink;
+  }
+
+  :focus-visible {
+    outline: 2px solid #24564D;
+    outline-offset: 2px;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Fraunces', 'Noto Sans Telugu', 'Noto Sans Devanagari', Georgia, serif;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Hides the scrollbar on horizontally-scrollable strips (e.g. the desktop
+   nav when it runs out of room) while keeping the element scrollable. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Signature motif: this app runs on physical government paperwork — gate */
+/* passes, MSP boards, rubber ink stamps, ledger stubs. These utilities   */
+/* carry that vocabulary into the UI instead of generic SaaS cards.       */
+/* ---------------------------------------------------------------------- */
+
+/* A card cut like a ticket stub, with punched semicircle notches on the
+   left and right edges and a dashed tear-line perforation. */
+.ticket-stub {
+  position: relative;
+  background: #FFFDF8;
+  border-radius: 1.25rem;
+  isolation: isolate;
+}
+.ticket-stub::before,
+.ticket-stub::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  background: #FBF6EA;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  box-shadow: inset 0 0 0 1px rgba(33,26,18,0.08);
+  z-index: 2;
+}
+.ticket-stub::before { left: -11px; }
+.ticket-stub::after { right: -11px; }
+
+.ticket-perforation {
+  border-top: 2px dashed rgba(33,26,18,0.18);
+}
+
+/* Rubber-stamp badge: rotated, inked border, slightly irregular — used for
+   status labels (OPEN / QUOTA FULL / PAID) so they read as "stamped". */
+.stamp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  transform: rotate(-3deg);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px -2px rgba(33,26,18,0.25);
+}
+
+/* Warm layered "paper" surface for primary cards, replacing flat white. */
+.paper-card {
+  background: #FFFDF8;
+  border: 1px solid rgba(33,26,18,0.08);
+  box-shadow: 0 1px 2px rgba(33,26,18,0.04), 0 8px 24px -14px rgba(33,26,18,0.25);
+}
+
+/* Ledger rule — a hairline with a warm tint, for table/list dividers. */
+.ledger-rule {
+  border-color: rgba(33,26,18,0.1);
+}
+
+/* Custom styling for Leaflet popups */
+.custom-leaflet-popup .leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+  padding: 0.25rem;
+  background: #FFFDF8;
+  box-shadow: 0 10px 25px -5px rgba(33,26,18,0.15), 0 8px 10px -6px rgba(33,26,18,0.1);
+}
+
+.custom-leaflet-popup .leaflet-popup-tip {
+  background-color: #FFFDF8;
+}
