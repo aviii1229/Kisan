@@ -9,7 +9,8 @@ import {
   CentreStatus,
   Farmer,
   AppNotification,
-  SlotAvailability
+  SlotAvailability,
+  ChatBubble
 } from '../types';
 import { playQueueChime, playSuccessSound } from '../utils/sound';
 import { INITIAL_CENTRES, INITIAL_TOKENS, MSP_CATALOG, INITIAL_ANNOUNCEMENTS } from '../seedData';
@@ -59,8 +60,8 @@ interface AppContextType {
   setBookingCentre: (c: ProcurementCentre | null) => void;
   viewPassToken: DigitalToken | null;
   setViewPassToken: (t: DigitalToken | null) => void;
-  activeTab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin';
-  setActiveTab: (tab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin') => void;
+  activeTab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice';
+  setActiveTab: (tab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice') => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   selectedCrop: string;
@@ -83,6 +84,10 @@ interface AppContextType {
   broadcastAnnouncement: (data: Partial<Announcement>) => Promise<Announcement>;
   resetDemoData: () => Promise<void>;
   setActiveToken: (token: DigitalToken | null) => void;
+  // Voice Chat History Persistence
+  voiceHistory: ChatBubble[];
+  addVoiceMessages: (msgs: ChatBubble[]) => void;
+  clearVoiceHistory: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -138,7 +143,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedCentre, setSelectedCentre] = useState<ProcurementCentre | null>(null);
   const [bookingCentre, setBookingCentre] = useState<ProcurementCentre | null>(null);
   const [viewPassToken, setViewPassToken] = useState<DigitalToken | null>(null);
-  const [activeTab, setActiveTab] = useState<'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin'>('centres');
+  const [activeTab, setActiveTab] = useState<'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice'>('centres');
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -628,6 +633,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAdminAuthed(false);
   };
 
+  // --- Voice Chat History Persistence ---
+  const INITIAL_WELCOME_MSG: ChatBubble = {
+    id: '1',
+    sender: 'ai',
+    text: 'नमस्ते! मैं किसान मदद वॉइस AI असिस्टेंट हूँ। आप मुझसे बोलकर किसी भी मंडी का टोकन बुक कर सकते हैं, भाव जान सकते हैं या टोकन स्टेटस पूछ सकते हैं।',
+    subtextEn: 'Hello! I am Kisan Madad Voice AI Assistant. You can speak to book tokens for any mandi, check MSP rates, or track queue status.',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    actionTaken: 'SYSTEM_READY'
+  };
+
+  const [voiceHistory, setVoiceHistoryState] = useState<ChatBubble[]>(() => {
+    const phone = farmer?.phone || 'default';
+    const saved = localStorage.getItem(`kisanh_voice_history_${phone}`);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [INITIAL_WELCOME_MSG];
+  });
+
+  const fetchVoiceHistory = useCallback(async (phoneOverride?: string) => {
+    const phone = phoneOverride || farmer?.phone || 'default';
+    const saved = localStorage.getItem(`kisanh_voice_history_${phone}`);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setVoiceHistoryState(parsed);
+        } else {
+          setVoiceHistoryState([INITIAL_WELCOME_MSG]);
+        }
+      } catch (e) {
+        setVoiceHistoryState([INITIAL_WELCOME_MSG]);
+      }
+    } else {
+      setVoiceHistoryState([INITIAL_WELCOME_MSG]);
+    }
+
+    try {
+      const res = await fetch(`/api/voice/history?phone=${encodeURIComponent(phone)}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        setVoiceHistoryState(json.data);
+        localStorage.setItem(`kisanh_voice_history_${phone}`, JSON.stringify(json.data));
+      }
+    } catch (e) {
+      // ignore network failure
+    }
+  }, [farmer?.phone]);
+
+  useEffect(() => {
+    fetchVoiceHistory();
+  }, [fetchVoiceHistory]);
+
+  const addVoiceMessages = (newMsgs: ChatBubble[]) => {
+    setVoiceHistoryState(prev => {
+      const updated = [...prev, ...newMsgs];
+      const phone = farmer?.phone || 'default';
+      localStorage.setItem(`kisanh_voice_history_${phone}`, JSON.stringify(updated));
+      fetch('/api/voice/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, messages: updated })
+      }).catch(() => {});
+      return updated;
+    });
+  };
+
+  const clearVoiceHistory = async () => {
+    setVoiceHistoryState([INITIAL_WELCOME_MSG]);
+    const phone = farmer?.phone || 'default';
+    localStorage.setItem(`kisanh_voice_history_${phone}`, JSON.stringify([INITIAL_WELCOME_MSG]));
+    try {
+      await fetch(`/api/voice/history?phone=${encodeURIComponent(phone)}`, { method: 'DELETE' });
+    } catch (e) {}
+  };
+
   // Poll notifications for a logged-in farmer alongside the other live data
   useEffect(() => {
     if (!farmer) return;
@@ -692,7 +777,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCentreCrop,
         broadcastAnnouncement,
         resetDemoData,
-        setActiveToken
+        setActiveToken,
+        voiceHistory,
+        addVoiceMessages,
+        clearVoiceHistory
       }}
     >
       {children}

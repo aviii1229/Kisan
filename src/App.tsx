@@ -17,6 +17,8 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminPinGate } from './components/AdminPinGate';
 import { FarmerAuthModal } from './components/FarmerAuthModal';
 import { TokenPassModal } from './components/TokenPassModal';
+import { FloatingVoiceAssistant } from './components/FloatingVoiceAssistant';
+import { VoiceAssistantPage } from './components/VoiceAssistantPage';
 
 // Icons
 import { Landmark, Search, MapPin, Globe, Sparkles, AlertCircle, SlidersHorizontal } from 'lucide-react';
@@ -357,6 +359,8 @@ export const App: React.FC = () => {
             {activeTab === 'queue' && <LiveQueueTracker />}
 
             {activeTab === 'analytics' && <AnalyticsModal />}
+
+            {activeTab === 'voice' && <VoiceAssistantPage />}
           </>
         )}
       </main>
@@ -396,6 +400,15 @@ export const App: React.FC = () => {
           onClose={() => setViewPassToken(null)}
         />
       )}
+
+      {/* Global Floating Voice AI Assistant */}
+      <FloatingVoiceAssistant
+        onOpenBookingModal={() => {
+          if (!bookingCentre && centres.length > 0) {
+            setBookingCentre(centres[0]);
+          }
+        }}
+      />
     </div>
   );
 };

@@ -178,3 +178,24 @@ export interface SlotAvailability {
   remaining: number;
   isFull: boolean;
 }
+
+export interface ChatBubble {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  subtextEn?: string;
+  time: string;
+  actionTaken?: string;
+  bookingForm?: {
+    centreId: string;
+    centreName: string;
+    farmerName: string;
+    phone: string;
+    cropId: string;
+    cropName: string;
+    quantityQuintals: number;
+    slotTime: string;
+    isBooked?: boolean;
+    bookedTokenNumber?: string;
+  };
+}

@@ -451,11 +451,11 @@
         }
       ],
       "queue": {
-        "totalTokensIssuedToday": 95,
+        "totalTokensIssuedToday": 96,
         "currentlyServingToken": "KST-095",
-        "activeQueueCount": 0,
+        "activeQueueCount": 1,
         "avgMinutesPerToken": 8,
-        "estimatedWaitTimeMinutes": 0
+        "estimatedWaitTimeMinutes": 8
       },
       "facilities": {
         "coveredYard": true,
@@ -756,6 +756,29 @@
       "totalWeightQuintals": null,
       "netPayableAmount": null,
       "issuedAt": "2026-08-29T22:13:48.345Z"
+    },
+    {
+      "tokenNumber": "KST-050",
+      "centreId": "PPC-TS-06",
+      "centreName": "Campierganj UPSWC Godown Procurement Centre",
+      "farmerName": "njkl",
+      "farmerName_te": "njkl",
+      "phone": "6846464568",
+      "aadhaarLast4": "4568",
+      "passbookNo": "TS-PPB-1429",
+      "cropId": "wheat",
+      "cropName": "Wheat (Sharbati / HD-2967)",
+      "quantityQuintals": 50,
+      "vehicleType": "Tractor-Trolley (टैक्टर)",
+      "vehicleNumber": "UP 53 AA 5555",
+      "slotDate": "2026-08-30",
+      "slotTime": "10:30 AM - 11:30 AM",
+      "status": "BOOKED",
+      "moistureMeasured": null,
+      "gradeAssigned": null,
+      "totalWeightQuintals": null,
+      "netPayableAmount": null,
+      "issuedAt": "2026-08-30T09:44:01.626Z"
     }
   ],
   "mspCatalog": [
@@ -995,12 +1018,28 @@
       "village": "565+94",
       "district": "256+95+9",
       "preferredLanguage": "en",
-      "aadhaarLast4": "",
-      "passbookNo": "",
+      "aadhaarLast4": "4568",
+      "passbookNo": "TS-PPB-1429",
       "createdAt": "2026-08-29T22:39:44.965Z"
     }
   ],
   "notifications": [
+    {
+      "id": "NOTIF-00050",
+      "phone": "6846464568",
+      "type": "booking",
+      "severity": "success",
+      "title": "Digital Token KST-050 Confirmed",
+      "title_te": "డిజిటల్ టోకెన్ KST-050 నిర్ధారించబడింది",
+      "title_hi": "डिजिटल टोकन KST-050 की पुष्टि हो गई",
+      "message": "Your slot at Campierganj UPSWC Godown Procurement Centre on 2026-08-30 (10:30 AM - 11:30 AM) is booked. Show your QR pass at the gate.",
+      "message_te": "Campierganj UPSWC Godown Procurement Centre వద్ద 2026-08-30 (10:30 AM - 11:30 AM) కు మీ స్లాట్ బుక్ చేయబడింది. గేటు వద్ద మీ QR పాస్ చూపించండి.",
+      "message_hi": "Campierganj UPSWC Godown Procurement Centre पर 2026-08-30 (10:30 AM - 11:30 AM) का आपका स्लॉट बुक हो गया है। कृपया गेट पर अपना QR पास दिखाएं।",
+      "tokenNumber": "KST-050",
+      "centreId": "PPC-TS-06",
+      "read": false,
+      "createdAt": "2026-08-30T09:44:01.627Z"
+    },
     {
       "id": "NOTIF-00049",
       "phone": "1235645464",
@@ -1786,7 +1825,7 @@
       "createdAt": "2026-08-29T15:45:12.853Z"
     }
   ],
-  "nextSeq": 50,
+  "nextSeq": 51,
   "nextFarmerSeq": 5,
-  "nextNotifSeq": 50
+  "nextNotifSeq": 51
 }

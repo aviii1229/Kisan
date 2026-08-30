@@ -361,13 +361,55 @@ app.post('/api/reset', requireAdminPin, (req, res) => {
   }
 });
 
+// --- VOICE CHAT HISTORY PERSISTENCE ENDPOINTS ---
+
+// GET /api/voice/history?phone=... - Fetch saved voice chat history for a farmer/guest
+app.get('/api/voice/history', (req, res) => {
+  try {
+    const phone = req.query.phone || 'default';
+    const history = db.getVoiceHistory(phone);
+    res.json({ success: true, count: history.length, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/voice/history - Save or append voice chat history
+app.post('/api/voice/history', (req, res) => {
+  try {
+    const { phone = 'default', message, messages } = req.body;
+    let history;
+    if (messages && Array.isArray(messages)) {
+      history = db.saveVoiceHistory(phone, messages);
+    } else if (message) {
+      history = db.appendVoiceMessage(phone, message);
+    } else {
+      return res.status(400).json({ success: false, message: 'message or messages required' });
+    }
+    res.json({ success: true, count: history.length, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/voice/history?phone=... - Clear voice chat history
+app.delete('/api/voice/history', (req, res) => {
+  try {
+    const phone = req.query.phone || req.body?.phone || 'default';
+    db.clearVoiceHistory(phone);
+    res.json({ success: true, message: 'Voice chat history cleared' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- SARVAM AI HINDI & INDIC VOICE ASSISTANT ENDPOINTS ---
 
-// POST /api/sarvam/tts - Convert Hindi text to natural speech using Sarvam AI (Bulbul)
+// POST /api/sarvam/tts - Convert Hindi/Indic text to natural speech using Sarvam AI (Bulbul)
 app.post('/api/sarvam/tts', async (req, res) => {
   try {
-    const { text, target_language_code = 'hi-IN', speaker = 'meera' } = req.body;
-    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY;
+    const { text, target_language_code = 'hi-IN', speaker = 'priya', pace = 1.0, pitch = 0, model = 'bulbul:v1' } = req.body;
+    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY || 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q';
 
     if (!apiKey) {
       return res.status(400).json({
@@ -376,23 +418,27 @@ app.post('/api/sarvam/tts', async (req, res) => {
       });
     }
 
+    const payload = {
+      inputs: [text],
+      target_language_code,
+      speaker: speaker || 'priya',
+      pace: typeof pace === 'number' ? pace : parseFloat(pace) || 1.0,
+      speech_sample_rate: 16000,
+      enable_preprocessing: true,
+      model: model || 'bulbul:v1'
+    };
+
+    if (pitch !== undefined && pitch !== 0) {
+      payload.pitch = typeof pitch === 'number' ? pitch : parseFloat(pitch);
+    }
+
     const sarvamRes = await fetch('https://api.sarvam.ai/text-to-speech', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'api-subscription-key': apiKey
       },
-      body: JSON.stringify({
-        inputs: [text],
-        target_language_code,
-        speaker,
-        pitch: 0,
-        pace: 1.05,
-        loudness: 1.5,
-        speech_sample_rate: 16000,
-        enable_preprocessing: true,
-        model: 'bulbul:v1'
-      })
+      body: JSON.stringify(payload)
     });
 
     const json = await sarvamRes.json();
@@ -400,7 +446,7 @@ app.post('/api/sarvam/tts', async (req, res) => {
       return res.status(sarvamRes.status).json({ success: false, message: json.message || 'Sarvam AI TTS Error', error: json });
     }
 
-    res.json({ success: true, audioBase64: json.audios ? json.audios[0] : null, model: 'bulbul:v1' });
+    res.json({ success: true, audioBase64: json.audios ? json.audios[0] : null, model: payload.model, speaker: payload.speaker });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -410,7 +456,7 @@ app.post('/api/sarvam/tts', async (req, res) => {
 app.post('/api/sarvam/stt', async (req, res) => {
   try {
     const { audioBase64, language_code = 'hi-IN' } = req.body;
-    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY;
+    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY || 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q';
 
     if (!apiKey) {
       return res.status(400).json({

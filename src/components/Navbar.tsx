@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, X, Landmark, User, Map, LineChart, FileText, Settings, Globe, Shield } from 'lucide-react';
+import { Menu, X, Landmark, User, Map, LineChart, FileText, Settings, Globe, Shield, Mic, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 import { NotificationBell } from './NotificationBell';
@@ -15,7 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLogin, onOpenAdminGate }) 
   const { lang, setLang, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
-  const handleTabClick = (tab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin') => {
+  const handleTabClick = (tab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice') => {
     if (tab === 'admin') {
       if (isAdminAuthed) {
         setUserRole('admin');
@@ -100,6 +100,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLogin, onOpenAdminGate }) 
               >
                 <FileText className="w-4 h-4" />
                 {t('queueTab')}
+              </button>
+              <button
+                onClick={() => handleTabClick('voice')}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'voice'
+                    ? 'bg-gradient-to-r from-purple-800 to-indigo-900 text-white shadow-md shadow-purple-900/20 scale-[1.02]'
+                    : 'text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-purple-600 animate-spin" />
+                <span>Voice AI</span>
+                <span className="text-[8px] bg-purple-600 text-white font-mono px-1 rounded uppercase tracking-widest font-extrabold">NEW</span>
               </button>
               <button
                 onClick={() => handleTabClick('analytics')}
@@ -246,6 +258,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLogin, onOpenAdminGate }) 
         >
           <FileText className="w-5 h-5 mb-0.5" />
           <span>Queue</span>
+        </button>
+
+        <button
+          onClick={() => handleTabClick('voice')}
+          className={`flex flex-col items-center justify-center min-w-[52px] py-1 px-2 rounded-xl text-[10px] font-extrabold transition-all btn-active-press ${
+            activeTab === 'voice'
+              ? 'text-purple-700 bg-purple-100'
+              : 'text-purple-600 hover:text-purple-800'
+          }`}
+        >
+          <Mic className="w-5 h-5 mb-0.5" />
+          <span>Voice AI</span>
         </button>
 
         <button

@@ -80,53 +80,175 @@ export function playSuccessSound(): void {
 }
 
 /**
- * Text-To-Speech Narration powered by Sarvam AI Indic Bulbul engine (with Web Speech fallback)
+ * Play voice start listening chime
  */
-export async function speakText(text: string, lang: 'en' | 'te' | 'hi' = 'hi'): Promise<void> {
-  // Attempt natural Indic speech generation via backend Sarvam AI Bulbul TTS (loads key from server .env)
+export function playVoiceStartChime(): void {
   try {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const savedSarvamKey = localStorage.getItem('kisanh_sarvam_api_key');
-    if (savedSarvamKey) headers['x-sarvam-api-key'] = savedSarvamKey;
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, now); // A4
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  } catch (e) {
+    // Ignore audio context errors
+  }
+}
 
+/**
+ * Play voice recognition success chime
+ */
+export function playVoiceSuccessChime(): void {
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(659.25, now); // E5
+    osc.frequency.setValueAtTime(880, now + 0.1); // A5
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } catch (e) {
+    // Ignore audio context errors
+  }
+}
+
+export interface SpeakOptions {
+  speaker?: 'priya' | 'arvind' | 'roopa' | 'shubh' | 'amartya';
+  pace?: number;
+  pitch?: number;
+  onStart?: () => void;
+  onEnd?: () => void;
+}
+
+// Global active audio object tracking
+let currentAudioInstance: HTMLAudioElement | null = null;
+
+/**
+ * Stop any current speech playback
+ */
+export function stopSpeaking(): void {
+  if (currentAudioInstance) {
+    currentAudioInstance.pause();
+    currentAudioInstance = null;
+  }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+/**
+ * Text-To-Speech Narration for Kisan Madad powered by Sarvam AI Indic Bulbul engine (with Web Speech fallback)
+ */
+export async function speakText(
+  text: string,
+  lang: 'en' | 'te' | 'hi' = 'hi',
+  options: SpeakOptions = {}
+): Promise<void> {
+  const { speaker = 'priya', pace = 0.95, pitch = 0, onStart, onEnd } = options;
+  stopSpeaking();
+
+  // Attempt natural Indic speech generation via backend Sarvam AI Bulbul TTS
+  try {
+    const target_language_code = lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN';
     const res = await fetch('/api/sarvam/tts', {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text,
-        target_language_code: lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN',
-        speaker: 'meera'
+        target_language_code,
+        speaker,
+        pace,
+        pitch
       })
     });
+
     const json = await res.json();
     if (json.success && json.audioBase64) {
       const audio = new Audio(`data:audio/wav;base64,${json.audioBase64}`);
-      audio.play();
+      currentAudioInstance = audio;
+      
+      audio.onplay = () => {
+        if (onStart) onStart();
+      };
+      
+      audio.onended = () => {
+        currentAudioInstance = null;
+        if (onEnd) onEnd();
+      };
+      
+      audio.onerror = () => {
+        currentAudioInstance = null;
+        fallbackWebSpeech(text, lang, options);
+      };
+
+      await audio.play();
       return;
     }
   } catch (e) {
-    console.warn('Sarvam AI TTS call fallback to browser Web Speech API:', e);
+    console.warn('Kisan Madad Sarvam TTS fallback to browser Web Speech API:', e);
   }
 
-  // Fallback to Web Speech API SpeechSynthesis
+  // Fallback to browser SpeechSynthesis API
+  fallbackWebSpeech(text, lang, options);
+}
+
+function fallbackWebSpeech(text: string, lang: 'en' | 'te' | 'hi', options: SpeakOptions): void {
+  const { pace = 0.95, pitch = 1.0, onStart, onEnd } = options;
+
   if (!('speechSynthesis' in window)) {
     console.warn('Speech synthesis not supported in this browser');
+    if (onEnd) onEnd();
     return;
   }
 
-  window.speechSynthesis.cancel(); // Stop ongoing speech
+  window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.92; // Slower for clear rural comprehension
-  utterance.pitch = 1.0;
+  utterance.rate = pace;
+  utterance.pitch = pitch || 1.0;
 
-  if (lang === 'te') {
-    utterance.lang = 'te-IN';
-  } else if (lang === 'hi') {
-    utterance.lang = 'hi-IN';
-  } else {
-    utterance.lang = 'en-IN';
+  const targetLang = lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN';
+  utterance.lang = targetLang;
+
+  // Smart natural voice selector for Hindi/Telugu/English
+  const voices = window.speechSynthesis.getVoices();
+  const matchingVoice = voices.find(v => 
+    v.lang.toLowerCase().includes(targetLang.toLowerCase()) || 
+    (lang === 'hi' && (v.name.includes('Hindi') || v.name.includes('हिन्दी') || v.name.includes('Hemant') || v.name.includes('Kalpana'))) ||
+    (lang === 'te' && (v.name.includes('Telugu') || v.name.includes('తెలుగు')))
+  );
+
+  if (matchingVoice) {
+    utterance.voice = matchingVoice;
   }
+
+  utterance.onstart = () => {
+    if (onStart) onStart();
+  };
+
+  utterance.onend = () => {
+    if (onEnd) onEnd();
+  };
+
+  utterance.onerror = () => {
+    if (onEnd) onEnd();
+  };
 
   window.speechSynthesis.speak(utterance);
 }
+

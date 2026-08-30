@@ -27,6 +27,7 @@ class Database {
         this.announcements = saved.announcements || JSON.parse(JSON.stringify(INITIAL_ANNOUNCEMENTS));
         this.farmers = saved.farmers || [];
         this.notifications = saved.notifications || [];
+        this.voiceHistory = saved.voiceHistory || {};
         this.nextSeq = saved.nextSeq || 46;
         this.nextFarmerSeq = saved.nextFarmerSeq || 1;
         this.nextNotifSeq = saved.nextNotifSeq || 1;
@@ -68,6 +69,7 @@ class Database {
         announcements: this.announcements,
         farmers: this.farmers,
         notifications: this.notifications,
+        voiceHistory: this.voiceHistory,
         nextSeq: this.nextSeq,
         nextFarmerSeq: this.nextFarmerSeq,
         nextNotifSeq: this.nextNotifSeq
@@ -665,6 +667,40 @@ class Database {
 
   deg2rad(deg) {
     return deg * (Math.PI / 180);
+  }
+
+  // Voice Chat History Persistence Methods
+  getVoiceHistory(phone = 'default') {
+    const key = String(phone || 'default');
+    return this.voiceHistory[key] || [];
+  }
+
+  saveVoiceHistory(phone = 'default', messages = []) {
+    const key = String(phone || 'default');
+    this.voiceHistory[key] = messages;
+    this.persist();
+    return this.voiceHistory[key];
+  }
+
+  appendVoiceMessage(phone = 'default', message) {
+    const key = String(phone || 'default');
+    if (!this.voiceHistory[key]) {
+      this.voiceHistory[key] = [];
+    }
+    this.voiceHistory[key].push(message);
+    // Limit to latest 100 messages to prevent memory bloat
+    if (this.voiceHistory[key].length > 100) {
+      this.voiceHistory[key] = this.voiceHistory[key].slice(-100);
+    }
+    this.persist();
+    return this.voiceHistory[key];
+  }
+
+  clearVoiceHistory(phone = 'default') {
+    const key = String(phone || 'default');
+    delete this.voiceHistory[key];
+    this.persist();
+    return [];
   }
 }
 
