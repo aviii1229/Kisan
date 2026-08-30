@@ -1,4 +1,4 @@
-# 🌾 Kisan H (किसान सेतु)
+# 🌾 Kisan (किसान सेतु)
 ### Smart Farmer Procurement Schedule & Status Information System
 
 An end-to-end, multilingual (English, Telugu, Hindi), real-time web application built to eliminate farmer distress at government procurement centres (Mandis, PACS, PPCs, FCI Godowns, CCI, and Markfed).
