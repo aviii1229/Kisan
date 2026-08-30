@@ -408,7 +408,7 @@ app.delete('/api/voice/history', (req, res) => {
 // POST /api/sarvam/tts - Convert Hindi/Indic text to natural speech using Sarvam AI (Bulbul)
 app.post('/api/sarvam/tts', async (req, res) => {
   try {
-    const { text, target_language_code = 'hi-IN', speaker = 'priya', pace = 1.0, pitch = 0, model = 'bulbul:v1' } = req.body;
+    const { text, target_language_code = 'hi-IN', speaker = 'priya', pace = 0.95, pitch = 0 } = req.body;
     const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY || 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q';
 
     if (!apiKey) {
@@ -418,14 +418,18 @@ app.post('/api/sarvam/tts', async (req, res) => {
       });
     }
 
+    // List of compatible speakers for Sarvam bulbul:v3
+    const validBulbulV3Speakers = ['priya', 'ritu', 'kavya', 'shreya', 'roopa', 'shubh', 'arvind', 'ratan', 'pooja', 'rahul', 'aditya', 'ashutosh', 'neha'];
+    const chosenSpeaker = validBulbulV3Speakers.includes(speaker?.toLowerCase()) ? speaker.toLowerCase() : 'priya';
+
     const payload = {
       inputs: [text],
       target_language_code,
-      speaker: speaker || 'priya',
-      pace: typeof pace === 'number' ? pace : parseFloat(pace) || 1.0,
-      speech_sample_rate: 16000,
+      speaker: chosenSpeaker,
+      pace: typeof pace === 'number' ? pace : parseFloat(pace) || 0.95,
+      speech_sample_rate: 22050,
       enable_preprocessing: true,
-      model: model || 'bulbul:v1'
+      model: 'bulbul:v3'
     };
 
     if (pitch !== undefined && pitch !== 0) {

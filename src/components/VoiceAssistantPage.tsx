@@ -202,11 +202,14 @@ export const VoiceAssistantPage: React.FC = () => {
     setEnglishSubtitle(result.speechTextEn);
     setActiveActionTag(result.actionTaken);
 
+    const primaryText = lang === 'te' ? result.speechTextTe : lang === 'en' ? result.speechTextEn : result.speechTextHi;
+    const secondaryText = lang === 'hi' ? result.speechTextEn : result.speechTextHi;
+
     const aiMsg: ChatBubble = {
       id: (Date.now() + 1).toString(),
       sender: 'ai',
-      text: result.speechTextHi,
-      subtextEn: result.speechTextEn,
+      text: primaryText,
+      subtextEn: secondaryText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       actionTaken: result.actionTaken,
       bookingForm: result.bookingFormPreset

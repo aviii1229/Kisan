@@ -141,11 +141,11 @@
         }
       ],
       "queue": {
-        "totalTokensIssuedToday": 53,
+        "totalTokensIssuedToday": 54,
         "currentlyServingToken": "KST-036",
-        "activeQueueCount": 10,
+        "activeQueueCount": 11,
         "avgMinutesPerToken": 10,
-        "estimatedWaitTimeMinutes": 100
+        "estimatedWaitTimeMinutes": 110
       },
       "facilities": {
         "coveredYard": true,
@@ -296,11 +296,11 @@
         }
       ],
       "queue": {
-        "totalTokensIssuedToday": 46,
+        "totalTokensIssuedToday": 47,
         "currentlyServingToken": "KST-030",
-        "activeQueueCount": 12,
+        "activeQueueCount": 13,
         "avgMinutesPerToken": 9,
-        "estimatedWaitTimeMinutes": 108
+        "estimatedWaitTimeMinutes": 117
       },
       "facilities": {
         "coveredYard": true,
@@ -451,11 +451,11 @@
         }
       ],
       "queue": {
-        "totalTokensIssuedToday": 96,
+        "totalTokensIssuedToday": 97,
         "currentlyServingToken": "KST-095",
-        "activeQueueCount": 1,
+        "activeQueueCount": 2,
         "avgMinutesPerToken": 8,
-        "estimatedWaitTimeMinutes": 8
+        "estimatedWaitTimeMinutes": 16
       },
       "facilities": {
         "coveredYard": true,
@@ -523,11 +523,11 @@
         }
       ],
       "queue": {
-        "totalTokensIssuedToday": 40,
+        "totalTokensIssuedToday": 41,
         "currentlyServingToken": "KST-027",
-        "activeQueueCount": 9,
+        "activeQueueCount": 10,
         "avgMinutesPerToken": 8,
-        "estimatedWaitTimeMinutes": 72
+        "estimatedWaitTimeMinutes": 80
       },
       "facilities": {
         "coveredYard": false,
@@ -917,6 +917,98 @@
       "totalWeightQuintals": null,
       "netPayableAmount": null,
       "issuedAt": "2026-08-30T11:09:31.082Z"
+    },
+    {
+      "tokenNumber": "KST-057",
+      "centreId": "PPC-TS-06",
+      "centreName": "Campierganj UPSWC Godown Procurement Centre",
+      "farmerName": "Aviral",
+      "farmerName_te": "Aviral",
+      "phone": "9226791416",
+      "aadhaarLast4": "1416",
+      "passbookNo": "TS-PPB-8321",
+      "cropId": "wheat",
+      "cropName": "Wheat (Sharbati / HD-2967)",
+      "quantityQuintals": 50,
+      "vehicleType": "Tractor-Trolley (टैक्टर)",
+      "vehicleNumber": "UP 53 AA 5555",
+      "slotDate": "2026-08-30",
+      "slotTime": "10:30 AM - 11:30 AM",
+      "status": "BOOKED",
+      "moistureMeasured": null,
+      "gradeAssigned": null,
+      "totalWeightQuintals": null,
+      "netPayableAmount": null,
+      "issuedAt": "2026-08-30T11:37:46.887Z"
+    },
+    {
+      "tokenNumber": "KST-058",
+      "centreId": "PPC-TS-02",
+      "centreName": "Kaptanganj PCF Paddy Procurement Centre",
+      "farmerName": "tjytmj",
+      "farmerName_te": "tjytmj",
+      "phone": "5442452524",
+      "aadhaarLast4": "2524",
+      "passbookNo": "TS-PPB-6385",
+      "cropId": "wheat",
+      "cropName": "Wheat (Sharbati / HD-2967)",
+      "quantityQuintals": 50,
+      "vehicleType": "Tractor-Trolley (टैक्टर)",
+      "vehicleNumber": "UP 53 AA 5555",
+      "slotDate": "2026-08-30",
+      "slotTime": "10:30 AM - 11:30 AM",
+      "status": "BOOKED",
+      "moistureMeasured": null,
+      "gradeAssigned": null,
+      "totalWeightQuintals": null,
+      "netPayableAmount": null,
+      "issuedAt": "2026-08-30T11:38:44.882Z"
+    },
+    {
+      "tokenNumber": "KST-059",
+      "centreId": "PPC-TS-07",
+      "centreName": "Chauri Chaura PCF Women SHG Paddy Procurement Centre",
+      "farmerName": "tjytmj",
+      "farmerName_te": "tjytmj",
+      "phone": "5442452524",
+      "aadhaarLast4": "2524",
+      "passbookNo": "TS-PPB-7511",
+      "cropId": "wheat",
+      "cropName": "Wheat (Sharbati / HD-2967)",
+      "quantityQuintals": 50,
+      "vehicleType": "Tractor-Trolley (टैक्टर)",
+      "vehicleNumber": "UP 53 AA 5555",
+      "slotDate": "2026-08-30",
+      "slotTime": "10:30 AM - 11:30 AM",
+      "status": "BOOKED",
+      "moistureMeasured": null,
+      "gradeAssigned": null,
+      "totalWeightQuintals": null,
+      "netPayableAmount": null,
+      "issuedAt": "2026-08-30T11:38:56.853Z"
+    },
+    {
+      "tokenNumber": "KST-060",
+      "centreId": "PPC-TS-04",
+      "centreName": "Bansgaon PCF Godown Procurement Centre",
+      "farmerName": "hjffhgcfhn",
+      "farmerName_te": "hjffhgcfhn",
+      "phone": "1111111111",
+      "aadhaarLast4": "1111",
+      "passbookNo": "TS-PPB-9054",
+      "cropId": "wheat",
+      "cropName": "Wheat (Sharbati / HD-2967)",
+      "quantityQuintals": 50,
+      "vehicleType": "Tractor-Trolley (टैक्टर)",
+      "vehicleNumber": "UP 53 AA 5555",
+      "slotDate": "2026-08-30",
+      "slotTime": "10:30 AM - 11:30 AM",
+      "status": "BOOKED",
+      "moistureMeasured": null,
+      "gradeAssigned": null,
+      "totalWeightQuintals": null,
+      "netPayableAmount": null,
+      "issuedAt": "2026-08-30T11:40:48.097Z"
     }
   ],
   "mspCatalog": [
@@ -1135,7 +1227,7 @@
       "district": "gota",
       "preferredLanguage": "en",
       "aadhaarLast4": "1416",
-      "passbookNo": "TS-PPB-9133",
+      "passbookNo": "TS-PPB-8321",
       "createdAt": "2026-08-29T18:53:04.842Z"
     },
     {
@@ -1181,9 +1273,95 @@
       "aadhaarLast4": "3210",
       "passbookNo": "TS-PPB-2152",
       "createdAt": "2026-08-30T11:09:31.082Z"
+    },
+    {
+      "id": "FARMER-0007",
+      "name": "tjytmj",
+      "phone": "5442452524",
+      "village": "fnfhfh",
+      "district": "fggfhngf",
+      "preferredLanguage": "en",
+      "aadhaarLast4": "2524",
+      "passbookNo": "TS-PPB-7511",
+      "createdAt": "2026-08-30T11:38:36.316Z"
+    },
+    {
+      "id": "FARMER-0008",
+      "name": "hjffhgcfhn",
+      "phone": "1111111111",
+      "village": "cfgfhfh",
+      "district": "fcgfnnhf",
+      "preferredLanguage": "en",
+      "aadhaarLast4": "1111",
+      "passbookNo": "TS-PPB-9054",
+      "createdAt": "2026-08-30T11:40:33.978Z"
     }
   ],
   "notifications": [
+    {
+      "id": "NOTIF-00060",
+      "phone": "1111111111",
+      "type": "booking",
+      "severity": "success",
+      "title": "Digital Token KST-060 Confirmed",
+      "title_te": "డిజిటల్ టోకెన్ KST-060 నిర్ధారించబడింది",
+      "title_hi": "डिजिटल टोकन KST-060 की पुष्टि हो गई",
+      "message": "Your slot at Bansgaon PCF Godown Procurement Centre on 2026-08-30 (10:30 AM - 11:30 AM) is booked. Show your QR pass at the gate.",
+      "message_te": "Bansgaon PCF Godown Procurement Centre వద్ద 2026-08-30 (10:30 AM - 11:30 AM) కు మీ స్లాట్ బుక్ చేయబడింది. గేటు వద్ద మీ QR పాస్ చూపించండి.",
+      "message_hi": "Bansgaon PCF Godown Procurement Centre पर 2026-08-30 (10:30 AM - 11:30 AM) का आपका स्लॉट बुक हो गया है। कृपया गेट पर अपना QR पास दिखाएं।",
+      "tokenNumber": "KST-060",
+      "centreId": "PPC-TS-04",
+      "read": true,
+      "createdAt": "2026-08-30T11:40:48.097Z"
+    },
+    {
+      "id": "NOTIF-00059",
+      "phone": "5442452524",
+      "type": "booking",
+      "severity": "success",
+      "title": "Digital Token KST-059 Confirmed",
+      "title_te": "డిజిటల్ టోకెన్ KST-059 నిర్ధారించబడింది",
+      "title_hi": "डिजिटल टोकन KST-059 की पुष्टि हो गई",
+      "message": "Your slot at Chauri Chaura PCF Women SHG Paddy Procurement Centre on 2026-08-30 (10:30 AM - 11:30 AM) is booked. Show your QR pass at the gate.",
+      "message_te": "Chauri Chaura PCF Women SHG Paddy Procurement Centre వద్ద 2026-08-30 (10:30 AM - 11:30 AM) కు మీ స్లాట్ బుక్ చేయబడింది. గేటు వద్ద మీ QR పాస్ చూపించండి.",
+      "message_hi": "Chauri Chaura PCF Women SHG Paddy Procurement Centre पर 2026-08-30 (10:30 AM - 11:30 AM) का आपका स्लॉट बुक हो गया है। कृपया गेट पर अपना QR पास दिखाएं।",
+      "tokenNumber": "KST-059",
+      "centreId": "PPC-TS-07",
+      "read": false,
+      "createdAt": "2026-08-30T11:38:56.853Z"
+    },
+    {
+      "id": "NOTIF-00058",
+      "phone": "5442452524",
+      "type": "booking",
+      "severity": "success",
+      "title": "Digital Token KST-058 Confirmed",
+      "title_te": "డిజిటల్ టోకెన్ KST-058 నిర్ధారించబడింది",
+      "title_hi": "डिजिटल टोकन KST-058 की पुष्टि हो गई",
+      "message": "Your slot at Kaptanganj PCF Paddy Procurement Centre on 2026-08-30 (10:30 AM - 11:30 AM) is booked. Show your QR pass at the gate.",
+      "message_te": "Kaptanganj PCF Paddy Procurement Centre వద్ద 2026-08-30 (10:30 AM - 11:30 AM) కు మీ స్లాట్ బుక్ చేయబడింది. గేటు వద్ద మీ QR పాస్ చూపించండి.",
+      "message_hi": "Kaptanganj PCF Paddy Procurement Centre पर 2026-08-30 (10:30 AM - 11:30 AM) का आपका स्लॉट बुक हो गया है। कृपया गेट पर अपना QR पास दिखाएं।",
+      "tokenNumber": "KST-058",
+      "centreId": "PPC-TS-02",
+      "read": false,
+      "createdAt": "2026-08-30T11:38:44.882Z"
+    },
+    {
+      "id": "NOTIF-00057",
+      "phone": "9226791416",
+      "type": "booking",
+      "severity": "success",
+      "title": "Digital Token KST-057 Confirmed",
+      "title_te": "డిజిటల్ టోకెన్ KST-057 నిర్ధారించబడింది",
+      "title_hi": "डिजिटल टोकन KST-057 की पुष्टि हो गई",
+      "message": "Your slot at Campierganj UPSWC Godown Procurement Centre on 2026-08-30 (10:30 AM - 11:30 AM) is booked. Show your QR pass at the gate.",
+      "message_te": "Campierganj UPSWC Godown Procurement Centre వద్ద 2026-08-30 (10:30 AM - 11:30 AM) కు మీ స్లాట్ బుక్ చేయబడింది. గేటు వద్ద మీ QR పాస్ చూపించండి.",
+      "message_hi": "Campierganj UPSWC Godown Procurement Centre पर 2026-08-30 (10:30 AM - 11:30 AM) का आपका स्लॉट बुक हो गया है। कृपया गेट पर अपना QR पास दिखाएं।",
+      "tokenNumber": "KST-057",
+      "centreId": "PPC-TS-06",
+      "read": false,
+      "createdAt": "2026-08-30T11:37:46.888Z"
+    },
     {
       "id": "NOTIF-00056",
       "phone": "9876543210",
@@ -2131,41 +2309,104 @@
         }
       }
     ],
+    "5442452524": [
+      {
+        "id": "1",
+        "sender": "ai",
+        "text": "नमस्ते! मैं किसान मदद वॉइस AI असिस्टेंट हूँ। आप मुझसे बोलकर किसी भी मंडी का टोकन बुक कर सकते हैं, भाव जान सकते हैं या टोकन स्टेटस पूछ सकते हैं।",
+        "subtextEn": "Hello! I am Kisan Madad Voice AI Assistant. You can speak to book tokens for any mandi, check MSP rates, or track queue status.",
+        "time": "05:08 pm",
+        "actionTaken": "SYSTEM_READY"
+      },
+      {
+        "id": "1788089921236",
+        "sender": "user",
+        "text": "गोरखपुर मंडी का टोकन बुक करो",
+        "time": "05:08 pm"
+      },
+      {
+        "id": "1788089921240",
+        "sender": "ai",
+        "text": "किसान मदद: नीचे चैट कार्ड में Gorakhpur की जानकारी पुष्टि करके 'कन्फर्म टोकन बुक करें' बटन दबाएं।",
+        "subtextEn": "Kisan Madad: Please confirm details in the interactive chat card below to book your token for Gorakhpur.",
+        "time": "05:08 pm",
+        "actionTaken": "INTERACTIVE_CHAT_BOOKING",
+        "bookingForm": {
+          "centreId": "PPC-TS-01",
+          "centreName": "Gorakhpur Krishi Utpadan Mandi Samiti (PPC-01)",
+          "farmerName": "tjytmj",
+          "phone": "5442452524",
+          "cropId": "wheat",
+          "cropName": "Wheat (Sharbati)",
+          "quantityQuintals": 50,
+          "slotTime": "10:30 AM - 11:30 AM",
+          "isBooked": false
+        }
+      }
+    ],
     "default": [
       {
         "id": "1",
         "sender": "ai",
         "text": "नमस्ते! मैं किसान मदद वॉइस AI असिस्टेंट हूँ। आप मुझसे बोलकर किसी भी मंडी का टोकन बुक कर सकते हैं, भाव जान सकते हैं या टोकन स्टेटस पूछ सकते हैं।",
         "subtextEn": "Hello! I am Kisan Madad Voice AI Assistant. You can speak to book tokens for any mandi, check MSP rates, or track queue status.",
-        "time": "04:38 pm",
+        "time": "05:35 PM",
         "actionTaken": "SYSTEM_READY"
       },
       {
-        "id": "1788088161092",
+        "id": "1788091552991",
         "sender": "user",
-        "text": "मेरा टोकन बताओ",
-        "time": "04:39 pm"
+        "text": "gehun ka price batao",
+        "time": "05:35 PM"
       },
       {
-        "id": "1788088161097",
+        "id": "1788091553010",
         "sender": "ai",
-        "text": "किसान मदद: आपका कोई सक्रिय टोकन नहीं मिला। नया टोकन बुक करने के लिए कहें \"गोरखपुर मंडी में टोकन बुक करो\"।",
-        "subtextEn": "Kisan Madad: No active token found. Say \"Book token for Gorakhpur Mandi\" to generate a pass.",
-        "time": "04:39 pm",
-        "actionTaken": "CHECK_TOKEN_EMPTY"
+        "text": "Kisan Madad: Minimum Support Price (MSP) board opened. Paddy Grade-A: ₹2,300/Qtl, Wheat: ₹2,425/Qtl.",
+        "subtextEn": "किसान मदद: न्यूनतम समर्थन मूल्य (MSP) और बाजार भाव: धान ग्रेड-ए ₹2,300/क्विंटल, गेहूं ₹2,425/क्विंटल।",
+        "time": "05:35 PM",
+        "actionTaken": "OPEN_PRICES"
       },
       {
-        "id": "1788088167885",
+        "id": "1788091742030",
         "sender": "user",
-        "text": "गोरखपुर मंडी का टोकन बुक करो",
-        "time": "04:39 pm"
+        "text": "gehun ka price batao",
+        "time": "05:39 PM"
       },
       {
-        "id": "1788088167888",
+        "id": "1788091742031",
+        "sender": "ai",
+        "text": "Kisan Madad: Minimum Support Price (MSP) board opened. Paddy Grade-A: ₹2,300/Qtl, Wheat: ₹2,425/Qtl.",
+        "subtextEn": "किसान मदद: न्यूनतम समर्थन मूल्य (MSP) और बाजार भाव: धान ग्रेड-ए ₹2,300/क्विंटल, गेहूं ₹2,425/क्विंटल।",
+        "time": "05:39 PM",
+        "actionTaken": "OPEN_PRICES"
+      },
+      {
+        "id": "1788091769877",
+        "sender": "user",
+        "text": "Apne bare Mein Kuchh batao",
+        "time": "05:39 PM"
+      },
+      {
+        "id": "1788091769878",
+        "sender": "ai",
+        "text": "Kisan Madad: I understand your query regarding \"Apne bare Mein Kuchh batao\". I am here to help! You can book a mandi token, check MSP rates, or locate nearest procurement yards. What would you like me to do?",
+        "subtextEn": "किसान मदद: मैं आपकी बात समझ गया। \"Apne bare Mein Kuchh batao\" के संबंध में मैं आपकी पूरी सहायता कर सकता हूँ। आप चाहें तो मंडी टोकन बुक कर सकते हैं, फसल का MSP भाव जान सकते हैं या पास की मंडी ढूँढ सकते हैं। बताएं, मैं आपकी क्या सहायता करूँ?",
+        "time": "05:39 PM",
+        "actionTaken": "CONVERSATIONAL_HELP"
+      },
+      {
+        "id": "1788091802038",
+        "sender": "user",
+        "text": "एक गोरखपुर का टोकन बुक करो",
+        "time": "05:40 PM"
+      },
+      {
+        "id": "1788091802039",
         "sender": "ai",
         "text": "किसान मदद: नीचे चैट कार्ड में Gorakhpur की जानकारी पुष्टि करके 'कन्फर्म टोकन बुक करें' बटन दबाएं।",
         "subtextEn": "Kisan Madad: Please confirm details in the interactive chat card below to book your token for Gorakhpur.",
-        "time": "04:39 pm",
+        "time": "05:40 PM",
         "actionTaken": "INTERACTIVE_CHAT_BOOKING",
         "bookingForm": {
           "centreId": "PPC-TS-01",
@@ -2178,10 +2419,24 @@
           "slotTime": "10:30 AM - 11:30 AM",
           "isBooked": false
         }
+      },
+      {
+        "id": "1788091834180",
+        "sender": "user",
+        "text": "कुछ",
+        "time": "05:40 PM"
+      },
+      {
+        "id": "1788091834181",
+        "sender": "ai",
+        "text": "किसान मदद: मैं आपकी बात समझ गया। \"कुछ\" के संबंध में मैं आपकी पूरी सहायता कर सकता हूँ। आप चाहें तो मंडी टोकन बुक कर सकते हैं, फसल का MSP भाव जान सकते हैं या पास की मंडी ढूँढ सकते हैं। बताएं, मैं आपकी क्या सहायता करूँ?",
+        "subtextEn": "Kisan Madad: I understand your query regarding \"कुछ\". I am here to help! You can book a mandi token, check MSP rates, or locate nearest procurement yards. What would you like me to do?",
+        "time": "05:40 PM",
+        "actionTaken": "CONVERSATIONAL_HELP"
       }
     ]
   },
-  "nextSeq": 57,
-  "nextFarmerSeq": 7,
-  "nextNotifSeq": 57
+  "nextSeq": 61,
+  "nextFarmerSeq": 9,
+  "nextNotifSeq": 61
 }

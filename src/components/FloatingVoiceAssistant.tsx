@@ -197,11 +197,14 @@ export const FloatingVoiceAssistant: React.FC<{ onOpenBookingModal?: () => void 
       directBookToken: (tokenData) => bookToken(tokenData)
     });
 
+    const primaryText = lang === 'te' ? result.speechTextTe : lang === 'en' ? result.speechTextEn : result.speechTextHi;
+    const secondaryText = lang === 'hi' ? result.speechTextEn : result.speechTextHi;
+
     const aiMsg: ChatMessage = {
       id: (Date.now() + 1).toString(),
       sender: 'ai',
-      text: result.speechTextHi,
-      subtextEn: result.speechTextEn,
+      text: primaryText,
+      subtextEn: secondaryText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       bookingForm: result.bookingFormPreset
     };

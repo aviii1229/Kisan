@@ -151,8 +151,36 @@ export function stopSpeaking(): void {
   }
 }
 
+function playBase64Audio(base64Data: string, onStart?: () => void, onEnd?: () => void): void {
+  try {
+    const audio = new Audio(`data:audio/wav;base64,${base64Data}`);
+    currentAudioInstance = audio;
+
+    audio.onplay = () => {
+      if (onStart) onStart();
+    };
+
+    audio.onended = () => {
+      currentAudioInstance = null;
+      if (onEnd) onEnd();
+    };
+
+    audio.onerror = () => {
+      currentAudioInstance = null;
+      if (onEnd) onEnd();
+    };
+
+    audio.play().catch(e => {
+      console.warn('Audio playback error:', e);
+      if (onEnd) onEnd();
+    });
+  } catch (err) {
+    if (onEnd) onEnd();
+  }
+}
+
 /**
- * Text-To-Speech Narration for Kisan Madad powered by Sarvam AI Indic Bulbul engine (with Web Speech fallback)
+ * Text-To-Speech Narration for Kisan Madad powered by Sarvam AI Indic Bulbul v3 engine
  */
 export async function speakText(
   text: string,
@@ -162,9 +190,10 @@ export async function speakText(
   const { speaker = 'priya', pace = 0.95, pitch = 0, onStart, onEnd } = options;
   stopSpeaking();
 
-  // Attempt natural Indic speech generation via backend Sarvam AI Bulbul TTS
+  const target_language_code = lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN';
+
+  // 1. Try Backend Proxy Route (/api/sarvam/tts)
   try {
-    const target_language_code = lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN';
     const res = await fetch('/api/sarvam/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -179,31 +208,45 @@ export async function speakText(
 
     const json = await res.json();
     if (json.success && json.audioBase64) {
-      const audio = new Audio(`data:audio/wav;base64,${json.audioBase64}`);
-      currentAudioInstance = audio;
-      
-      audio.onplay = () => {
-        if (onStart) onStart();
-      };
-      
-      audio.onended = () => {
-        currentAudioInstance = null;
-        if (onEnd) onEnd();
-      };
-      
-      audio.onerror = () => {
-        currentAudioInstance = null;
-        fallbackWebSpeech(text, lang, options);
-      };
-
-      await audio.play();
+      playBase64Audio(json.audioBase64, onStart, onEnd);
       return;
     }
   } catch (e) {
-    console.warn('Kisan Madad Sarvam TTS fallback to browser Web Speech API:', e);
+    // Proceed to direct Sarvam API
   }
 
-  // Fallback to browser SpeechSynthesis API
+  // 2. Direct Sarvam AI Bulbul v3 API (Ensures ultra-realistic pleasant female/male voice)
+  try {
+    const validBulbulV3Speakers = ['priya', 'ritu', 'kavya', 'shreya', 'roopa', 'shubh', 'arvind', 'ratan', 'pooja', 'rahul', 'aditya', 'ashutosh', 'neha'];
+    const chosenSpeaker = validBulbulV3Speakers.includes(speaker?.toLowerCase()) ? speaker.toLowerCase() : 'priya';
+
+    const directRes = await fetch('https://api.sarvam.ai/text-to-speech', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-subscription-key': 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q'
+      },
+      body: JSON.stringify({
+        inputs: [text],
+        target_language_code,
+        speaker: chosenSpeaker,
+        pace: typeof pace === 'number' ? pace : 0.95,
+        speech_sample_rate: 22050,
+        enable_preprocessing: true,
+        model: 'bulbul:v3'
+      })
+    });
+
+    const directJson = await directRes.json();
+    if (directJson.audios && directJson.audios[0]) {
+      playBase64Audio(directJson.audios[0], onStart, onEnd);
+      return;
+    }
+  } catch (err) {
+    console.warn('Direct Sarvam TTS API error:', err);
+  }
+
+  // 3. Fallback to browser SpeechSynthesis API if offline
   fallbackWebSpeech(text, lang, options);
 }
 

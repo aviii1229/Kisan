@@ -10,7 +10,7 @@ import {
   onAuthChange,
   setupRecaptcha
 } from '../lib/firebaseAuth';
-import { isFirebaseConfigured } from '../lib/firebase';
+import { isFirebaseConfigured, auth } from '../lib/firebase';
 
 interface FirebaseAuthContextType {
   currentUser: User | null;
@@ -31,7 +31,7 @@ export const FirebaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const isFirebaseReady = isFirebaseConfigured();
+  const isFirebaseReady = isFirebaseConfigured() && Boolean(auth);
 
   useEffect(() => {
     if (!isFirebaseReady) {

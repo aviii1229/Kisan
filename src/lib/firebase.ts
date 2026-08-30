@@ -2,16 +2,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import type { FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
-import dotenv from 'dotenv';
-
-// Load .env in Node.js environment if process exists
-if (typeof process !== 'undefined') {
-  try {
-    dotenv.config();
-  } catch (e) {
-    // Ignore in browser
-  }
-}
 
 const metaEnv = (typeof import.meta !== 'undefined' && (import.meta as any).env) ? (import.meta as any).env : {};
 const procEnv = (typeof process !== 'undefined' && process.env) ? process.env : {};
@@ -37,12 +27,25 @@ export const isFirebaseConfigured = (): boolean => {
   );
 };
 
-// Initialize Firebase App instance safely
-export const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+let appInstance: FirebaseApp | null = null;
+let authInstance: Auth | null = null;
 
-// Firebase Authentication Instance
-export const auth: Auth = getAuth(app);
+if (isFirebaseConfigured()) {
+  try {
+    appInstance = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    authInstance = getAuth(appInstance);
+  } catch (err) {
+    console.warn('Firebase initialization warning (app using fallback authentication):', err);
+    appInstance = null;
+    authInstance = null;
+  }
+}
+
+// Safely exported Firebase instances (or null if unconfigured/invalid)
+export const app = appInstance;
+export const auth = authInstance;
 
 // Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+

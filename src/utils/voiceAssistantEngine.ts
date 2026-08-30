@@ -284,8 +284,9 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
     };
   }
 
-  // 5. LANGUAGE CHANGE INTENT
-  if (clean.includes('अंग्रेजी में') || clean.includes('अंग्रेजी बोलो') || clean.includes('english language') || clean.includes('switch to english')) {
+  // 5. LANGUAGE CHANGE INTENT (Requires explicit command)
+  const isEngSwitch = clean.includes('switch to english') || clean.includes('speak in english') || clean.includes('change language to english') || clean.includes('अंग्रेजी में बोलो') || clean.includes('अंग्रेजी में बदलो');
+  if (isEngSwitch) {
     setLanguage('en');
     const hi = 'किसान मदद: भाषा बदलकर अंग्रेजी कर दी गई है।';
     const en = 'Kisan Madad: Switched language preference to English.';
@@ -296,7 +297,9 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
       actionTaken: 'SET_LANG_EN'
     };
   }
-  if (clean.includes('हिंदी में') || clean.includes('हिन्दी बोलो') || clean.includes('hindi language') || clean.includes('switch to hindi')) {
+
+  const isHindiSwitch = clean.includes('switch to hindi') || clean.includes('speak in hindi') || clean.includes('change language to hindi') || clean.includes('हिंदी में बोलो') || clean.includes('हिन्दी में बदलो');
+  if (isHindiSwitch) {
     setLanguage('hi');
     const hi = 'किसान मदद: भाषा बदलकर हिंदी कर दी गई है।';
     const en = 'Kisan Madad: Switched language preference to Hindi.';
@@ -307,7 +310,9 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
       actionTaken: 'SET_LANG_HI'
     };
   }
-  if (clean.includes('तेलुगु') || clean.includes('తెలుగు') || clean.includes('telugu')) {
+
+  const isTeluguSwitch = clean.includes('switch to telugu') || clean.includes('speak in telugu') || clean.includes('change language to telugu') || clean.includes('तेलुगु में बोलो') || clean.includes('తెలుగులో మాట్లాడు');
+  if (isTeluguSwitch) {
     setLanguage('te');
     const hi = 'किसान मदद: भाषा बदलकर तेलुगु कर दी गई है।';
     const en = 'Kisan Madad: Switched language preference to Telugu.';
@@ -316,6 +321,85 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
       speechTextHi: hi, speechTextEn: en, speechTextTe: te,
       spokenMessage: te,
       actionTaken: 'SET_LANG_TE'
+    };
+  }
+
+  // 10. GREETINGS & IDENTITY INTENT
+  const isGreeting = clean.includes('नमस्ते') || clean.includes('नमस्कार') || clean.includes('हेलो') || clean.includes('हेय') || clean === 'hi' || clean === 'hello' || clean === 'hey' || clean.includes('आप कौन') || clean.includes('who are you') || clean.includes('नाम क्या है');
+  if (isGreeting) {
+    const hi = 'किसान मदद: नमस्ते किसान भाई! मैं आपका किसान मदद AI सहायक हूँ। मैं मंडी टोकन बुक करने, फसल MSP भाव बताने, कतार स्थिति देखने और सरकारी मंडी में फसल बेचने में आपकी सहायता कर सकता हूँ। बताएं, मैं आपकी क्या मदद करूँ?';
+    const en = 'Kisan Madad: Hello farmer! I am your Kisan Madad AI Assistant. I can help you book mandi tokens, check MSP rates, track your active queue position, and locate nearest procurement centres. How can I help you today?';
+    const te = 'కిసాన్ మదద్: నమస్కారం! నేను మీ కిసాన్ మదద్ AI సహాయకుడిని. టోకెన్ బుకింగ్, మద్దతు ధరలు మరియు కొనుగోలు కేంద్రాల వివరాల కోసం సహాయం చేయగలను.';
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'GREETING'
+    };
+  }
+
+  // 11. GENERAL HELP & ASSISTANCE INTENT
+  const isGeneralHelpReq = clean.includes('मदद') || clean.includes('सहायता') || clean.includes('help') || clean.includes('guide') || clean.includes('सहायक') || clean.includes('कैसे इस्तेमाल') || clean.includes('क्या कर सकते') || clean.includes('what can you do');
+  if (isGeneralHelpReq) {
+    const hi = 'किसान मदद: मैं आपकी पूरी सहायता के लिए तैयार हूँ! आप मुझसे ये कार्य करवा सकते हैं:\n1. 🎟️ "गोरखपुर मंडी में 50 क्विंटल गेहूं का टोकन बुक करो"\n2. 📊 "धान का एमएसपी भाव बताओ"\n3. ⏳ "मेरे टोकन की स्थिति क्या है"\n4. 📍 "पास की मंडी दिखाओ"\n5. 🌦️ "आज का मौसम बताओ"\nबताएं, मैं आपकी क्या मदद करूँ?';
+    const en = 'Kisan Madad: I am here to assist you with all farming tasks:\n1. 🎟️ Book Mandi Procurement Tokens\n2. 📊 Check Crop MSP Rates & Prices\n3. ⏳ Track Active Token & Queue Position\n4. 📍 Locate Nearest Procurement Yards\n5. 🌦️ Weather & Official Farmer Advisories.\nHow can I help you right now?';
+    const te = 'కిసాన్ మదద్: నేను టోకెన్ బుకింగ్, MSP ధరలు, లైవ్ క్యూ మరియు సమీప కొనుగోలు కేంద్రాల వివరాలలో మీకు సహాయం చేయగలను.';
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'GENERAL_HELP'
+    };
+  }
+
+  // 12. CROP PROCUREMENT PROCESS / HOW TO SELL CROPS INTENT
+  const isProcessReq = clean.includes('फसल कैसे बेचें') || clean.includes('प्रक्रिया क्या है') || clean.includes('फसल बेचना') || clean.includes('मंडी प्रक्रिया') || clean.includes('how to sell') || clean.includes('procurement process') || clean.includes('खरीद कैसे होगी') || clean.includes('कैसे बेचें');
+  if (isProcessReq) {
+    const hi = 'किसान मदद: सरकारी क्रय केंद्र (मंडी) में MSP पर फसल बेचने की आसान 4-चरण प्रक्रिया:\n1. ऑनलाइन समय स्लॉट चुनकर टोकन बुक करें।\n2. तय समय पर अपनी फसल ट्रॉली लेकर केंद्र पहुंचे।\n3. गेट पर डिजिटल टोकन/QR कोड दिखाकर तौल कराएं।\n4. फसल पास होने के 24-48 घंटे में भुगतान सीधे आपके बैंक खाते (DBT) में आ जाएगा।';
+    const en = 'Kisan Madad: Simple 4-step mandi procurement process:\n1. Book a Digital Token online for your preferred slot.\n2. Bring your crop trolley to the centre on time.\n3. Show token QR code for quality test & weighing.\n4. Payment is directly transferred to your bank account via Direct Benefit Transfer (DBT) within 24-48 hours.';
+    const te = 'కిసాన్ మదద్: పంట అమ్మకపు విధానం: టోకెన్ బుక్ చేసుకోండి, సమయానికి కేంద్రానికి రండి, తూకం ముగిసాక డబ్బు నేరుగా బ్యాంక్ ఖాతాలోకి వస్తుంది.';
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'PROCUREMENT_GUIDE'
+    };
+  }
+
+  // 13. REQUIRED DOCUMENTS INTENT
+  const isDocReq = clean.includes('कागजात') || clean.includes('दस्तावेज') || clean.includes('डॉक्यूमेंट') || clean.includes('कागज') || clean.includes('document') || clean.includes('documents') || clean.includes('aadhaar') || clean.includes('passbook') || clean.includes('खतौनी');
+  if (isDocReq) {
+    const hi = 'किसान मदद: मंडी में फसल बेचने के लिए आवश्यक दस्तावेज़:\n1. आधार कार्ड (Aadhaar Card)\n2. भूमि खसरा / खतौनी नकल\n3. बैंक पासबुक प्रति (DBT भुगतान हेतु)\n4. किसान पंजीकरण आईडी (Farmer ID)';
+    const en = 'Kisan Madad: Required Documents for Mandi Procurement:\n1. Aadhaar Card\n2. Land Record (Khasra/Khatauni)\n3. Bank Passbook copy (for DBT payment)\n4. Farmer Registration ID.';
+    const te = 'కిసాన్ మదద్: అవసరమైన పత్రాలు: ఆధార్ కార్డ్, పట్టాదార్ పాస్ పుస్తకం, బ్యాంక్ పాస్ బుక్ మరియు రైతు నమోదు ఐడి.';
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'DOCUMENTS_GUIDE'
+    };
+  }
+
+  // 14. CANCEL / MODIFY TOKEN INTENT
+  const isCancelReq = clean.includes('टोकन रद्द') || clean.includes('टोकन कैंसिल') || clean.includes('टोकन बदलना') || clean.includes('cancel token') || clean.includes('change token') || clean.includes('स्लॉट बदलना');
+  if (isCancelReq) {
+    setActiveTab('queue');
+    const hi = 'किसान मदद: टोकन रद्द या बदलने के लिए "लाइव कतार" (Queue Tracker) टैब खोल दिया गया है। आपके सक्रिय टोकन कार्ड पर "रद्द करें" बटन दिया गया है। रद्द करने के बाद नया टोकन बुक कर सकते हैं।';
+    const en = 'Kisan Madad: Opened Queue Tracker. To cancel or change your token slot, click "Cancel Token" on your active token card, then book a fresh token for your preferred time.';
+    const te = 'కిసాన్ మదద్: టోకెన్ రద్దు చేయడానికి "లైవ్ క్యూ" విభాగాన్ని ఉపయోగించండి.';
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'CANCEL_TOKEN_GUIDE'
+    };
+  }
+
+  // 15. PAYMENT & DBT INTENT
+  const isPaymentReq = clean.includes('पैसा कब मिलेगा') || clean.includes('पेमेंट') || clean.includes('भुगतान') || clean.includes('payment') || clean.includes('dbt') || clean.includes('बैंक खाता') || clean.includes('money');
+  if (isPaymentReq) {
+    const hi = 'किसान मदद: क्रय केंद्र पर फसल तौल पूरा होने के 24 से 48 घंटों में भुगतान सीधे आपके आधार-लिंक्ड बैंक खाते में (DBT माध्यम से) जमा कर दिया जाता है।';
+    const en = 'Kisan Madad: Payment is transferred directly to your Aadhaar-seeded bank account via Direct Benefit Transfer (DBT) within 24-48 hours after crop weighing.';
+    const te = 'కిసాన్ మదద్: తూకం పూర్తయిన 24-48 గంటల్లో డబ్బు నేరుగా మీ బ్యాంక్ ఖాతాలో జమ అవుతుంది.';
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'PAYMENT_GUIDE'
     };
   }
 
@@ -377,9 +461,8 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
   }
 
   // 10. SPECIFIC LOCATION OR CROP FILTERING
-  setActiveTab('centres');
-
   if (targetCentre) {
+    setActiveTab('centres');
     setSearchQuery(targetCentre.name.split(' ')[0]);
     const hi = `किसान मदद: केवल ${targetCentre.name} प्रदर्शित की जा रही है।`;
     const en = `Kisan Madad: Displaying only ${targetCentre.name}.`;
@@ -392,6 +475,7 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
   }
 
   if (matchedCrop) {
+    setActiveTab('centres');
     setSelectedCrop(matchedCrop.id);
     setSearchQuery('');
     const hi = `किसान मदद: केवल ${matchedCrop.hi} स्वीकार करने वाले क्रय केंद्र प्रदर्शित किए जा रहे हैं।`;
@@ -405,21 +489,40 @@ export async function processVoiceIntent(params: ProcessVoiceCommandParams): Pro
   }
 
   // Clean generic filler words
-  const searchKeyword = clean
-    .replace(/किसान मदद|मंडी|उत्पादन|समिति|क्रय|केंद्र|सेंटर|दिखाओ|दिखाइए|खोलें|बताओ|का|की|के|में|स्थित|वाली|वाला|लिस्ट|सूची/gi, '')
-    .trim();
+  // 16. EXPLICIT MANDI / CENTRE SEARCH INTENT
+  const isExplicitSearch = clean.includes('खोजो') || clean.includes('सर्च') || clean.includes('ढूंढो') || clean.includes('search') || clean.includes('mandi list') || clean.includes('केंद्र सूची') || clean.includes('सेंटर दिखाओ') || clean.includes('मंडी दिखाओ') || clean.includes('सेंटर लिस्ट');
 
-  const finalQuery = searchKeyword || command;
-  setSearchQuery(finalQuery);
-  const hi = `किसान मदद: ${finalQuery} क्रय केंद्र प्रदर्शित किया जा रहा है।`;
-  const en = `Kisan Madad: Searching procurement centres for "${finalQuery}".`;
-  const te = `కిసాన్ మదద్: "${finalQuery}" కేంద్రాలు వెతకబడుతున్నాయి.`;
+  if (isExplicitSearch) {
+    setActiveTab('centres');
+    const searchKeyword = clean
+      .replace(/किसान मदद|मंडी|उत्पादन|समिति|क्रय|केंद्र|सेंटर|दिखाओ|दिखाइए|खोलें|बताओ|का|की|के|में|स्थित|वाली|वाला|लिस्ट|सूची|खोजो|सर्च|ढूंढो|search/gi, '')
+      .trim();
+
+    const finalQuery = searchKeyword || command;
+    setSearchQuery(finalQuery);
+    const hi = `किसान मदद: "${finalQuery}" क्रय केंद्र खोजे जा रहे हैं।`;
+    const en = `Kisan Madad: Searching procurement centres for "${finalQuery}".`;
+    const te = `Kisan Madad: Searching centres for "${finalQuery}".`;
+
+    return {
+      speechTextHi: hi, speechTextEn: en, speechTextTe: te,
+      spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
+      actionTaken: 'GENERIC_SEARCH'
+    };
+  }
+
+  // 17. CONVERSATIONAL KNOWLEDGE BASE & HELPFUL ASSISTANT FALLBACK
+  // (Do NOT redirect to centres search tab! Answer the user directly and offer task assistance)
+  const hi = `किसान मदद: मैं आपकी बात समझ गया। "${command}" के संबंध में मैं आपकी पूरी सहायता कर सकता हूँ। आप चाहें तो मंडी टोकन बुक कर सकते हैं, फसल का MSP भाव जान सकते हैं या पास की मंडी ढूँढ सकते हैं। बताएं, मैं आपकी क्या सहायता करूँ?`;
+  const en = `Kisan Madad: I understand your query regarding "${command}". I am here to help! You can book a mandi token, check MSP rates, or locate nearest procurement yards. What would you like me to do?`;
+  const te = `Kisan Madad: I can help you regarding "${command}". Would you like to book a token or check MSP rates?`;
 
   return {
     speechTextHi: hi,
     speechTextEn: en,
     speechTextTe: te,
     spokenMessage: lang === 'te' ? te : lang === 'hi' ? hi : en,
-    actionTaken: 'GENERIC_SEARCH'
+    actionTaken: 'CONVERSATIONAL_HELP'
   };
 }
+

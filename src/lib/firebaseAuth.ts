@@ -18,6 +18,10 @@ export const setupRecaptcha = (containerId: string = 'recaptcha-container'): Rec
     throw new Error('reCAPTCHA can only be initialized in the browser environment.');
   }
 
+  if (!auth) {
+    throw new Error('Firebase Authentication is not configured or initialized.');
+  }
+
   // Clear existing reCAPTCHA instance if present
   if ((window as any).recaptchaVerifier) {
     try {
@@ -50,7 +54,7 @@ export const sendPhoneOtp = async (
   phoneNumber: string,
   recaptchaVerifier?: RecaptchaVerifier
 ): Promise<ConfirmationResult> => {
-  if (!isFirebaseConfigured()) {
+  if (!isFirebaseConfigured() || !auth) {
     throw new Error('Firebase credentials are not configured in .env file.');
   }
 
@@ -80,7 +84,7 @@ export const verifyPhoneOtp = async (
  * Sign in using Google OAuth Popup
  */
 export const signInWithGoogle = async (): Promise<User> => {
-  if (!isFirebaseConfigured()) {
+  if (!isFirebaseConfigured() || !auth) {
     throw new Error('Firebase credentials are not configured in .env file.');
   }
   const result = await signInWithPopup(auth, googleProvider);
@@ -91,7 +95,7 @@ export const signInWithGoogle = async (): Promise<User> => {
  * Register user using Email and Password
  */
 export const registerWithEmail = async (email: string, password: string): Promise<User> => {
-  if (!isFirebaseConfigured()) {
+  if (!isFirebaseConfigured() || !auth) {
     throw new Error('Firebase credentials are not configured in .env file.');
   }
   const result = await createUserWithEmailAndPassword(auth, email, password);
@@ -102,7 +106,7 @@ export const registerWithEmail = async (email: string, password: string): Promis
  * Sign in user using Email and Password
  */
 export const signInWithEmail = async (email: string, password: string): Promise<User> => {
-  if (!isFirebaseConfigured()) {
+  if (!isFirebaseConfigured() || !auth) {
     throw new Error('Firebase credentials are not configured in .env file.');
   }
   const result = await signInWithEmailAndPassword(auth, email, password);
@@ -113,12 +117,25 @@ export const signInWithEmail = async (email: string, password: string): Promise<
  * Sign Out current Firebase user
  */
 export const logoutFirebaseUser = async (): Promise<void> => {
-  await signOut(auth);
+  if (auth) {
+    await signOut(auth);
+  }
 };
 
 /**
  * Observe authentication state changes
  */
 export const onAuthChange = (callback: (user: User | null) => void) => {
-  return onAuthStateChanged(auth, callback);
+  if (!auth) {
+    callback(null);
+    return () => {};
+  }
+  try {
+    return onAuthStateChanged(auth, callback);
+  } catch (e) {
+    console.warn('Firebase onAuthChange error:', e);
+    callback(null);
+    return () => {};
+  }
 };
+
