@@ -79,54 +79,6 @@ export function playSuccessSound(): void {
   }
 }
 
-/**
- * Play voice start listening chime
- */
-export function playVoiceStartChime(): void {
-  try {
-    const ctx = getAudioContext();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, now); // A4
-    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15); // A5
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.25, now + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.25);
-  } catch (e) {
-    // Ignore audio context errors
-  }
-}
-
-/**
- * Play voice recognition success chime
- */
-export function playVoiceSuccessChime(): void {
-  try {
-    const ctx = getAudioContext();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(659.25, now); // E5
-    osc.frequency.setValueAtTime(880, now + 0.1); // A5
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.3);
-  } catch (e) {
-    // Ignore audio context errors
-  }
-}
-
 export interface SpeakOptions {
   speaker?: 'priya' | 'arvind' | 'roopa' | 'shubh' | 'amartya';
   pace?: number;
@@ -179,77 +131,6 @@ function playBase64Audio(base64Data: string, onStart?: () => void, onEnd?: () =>
   }
 }
 
-/**
- * Text-To-Speech Narration for Kisan Madad powered by Sarvam AI Indic Bulbul v3 engine
- */
-export async function speakText(
-  text: string,
-  lang: 'en' | 'te' | 'hi' = 'hi',
-  options: SpeakOptions = {}
-): Promise<void> {
-  const { speaker = 'priya', pace = 0.95, pitch = 0, onStart, onEnd } = options;
-  stopSpeaking();
-
-  const target_language_code = lang === 'te' ? 'te-IN' : lang === 'hi' ? 'hi-IN' : 'en-IN';
-
-  // 1. Try Backend Proxy Route (/api/sarvam/tts)
-  try {
-    const res = await fetch('/api/sarvam/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        target_language_code,
-        speaker,
-        pace,
-        pitch
-      })
-    });
-
-    const json = await res.json();
-    if (json.success && json.audioBase64) {
-      playBase64Audio(json.audioBase64, onStart, onEnd);
-      return;
-    }
-  } catch (e) {
-    // Proceed to direct Sarvam API
-  }
-
-  // 2. Direct Sarvam AI Bulbul v3 API (Ensures ultra-realistic pleasant female/male voice)
-  try {
-    const validBulbulV3Speakers = ['priya', 'ritu', 'kavya', 'shreya', 'roopa', 'shubh', 'arvind', 'ratan', 'pooja', 'rahul', 'aditya', 'ashutosh', 'neha'];
-    const chosenSpeaker = validBulbulV3Speakers.includes(speaker?.toLowerCase()) ? speaker.toLowerCase() : 'priya';
-
-    const directRes = await fetch('https://api.sarvam.ai/text-to-speech', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-subscription-key': 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q'
-      },
-      body: JSON.stringify({
-        inputs: [text],
-        target_language_code,
-        speaker: chosenSpeaker,
-        pace: typeof pace === 'number' ? pace : 0.95,
-        speech_sample_rate: 22050,
-        enable_preprocessing: true,
-        model: 'bulbul:v3'
-      })
-    });
-
-    const directJson = await directRes.json();
-    if (directJson.audios && directJson.audios[0]) {
-      playBase64Audio(directJson.audios[0], onStart, onEnd);
-      return;
-    }
-  } catch (err) {
-    console.warn('Direct Sarvam TTS API error:', err);
-  }
-
-  // 3. Fallback to browser SpeechSynthesis API if offline
-  fallbackWebSpeech(text, lang, options);
-}
-
 function fallbackWebSpeech(text: string, lang: 'en' | 'te' | 'hi', options: SpeakOptions): void {
   const { pace = 0.95, pitch = 1.0, onStart, onEnd } = options;
 
@@ -294,4 +175,3 @@ function fallbackWebSpeech(text: string, lang: 'en' | 'te' | 'hi', options: Spea
 
   window.speechSynthesis.speak(utterance);
 }
-

@@ -142,6 +142,42 @@ export const TokenBookingModal: React.FC<TokenBookingModalProps> = ({ centre, on
     }
   };
 
+  // Auth Gate: If farmer is not logged in, show login-required screen
+  if (!farmer) {
+    return createPortal(
+      <div
+        className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <div className="min-h-full flex items-center justify-center p-4">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#FFFDF8] rounded-3xl shadow-lifted w-full max-w-md relative animate-fadeIn overflow-hidden border border-slate-200 paper-bg-texture p-10 text-center space-y-5"
+          >
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-amber-500" />
+            </div>
+            <h3 className="font-display font-black text-slate-900 text-lg">Login Required</h3>
+            <p className="text-sm text-slate-500 font-semibold leading-relaxed max-w-xs mx-auto">
+              You must log in with your registered phone number before booking a procurement token at <strong className="text-slate-700">{centre.name.split('(')[0].trim()}</strong>.
+            </p>
+            <p className="text-[10px] text-slate-400 font-bold flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Your data is private and visible only to you
+            </p>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm"

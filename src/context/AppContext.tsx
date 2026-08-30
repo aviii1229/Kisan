@@ -9,8 +9,7 @@ import {
   CentreStatus,
   Farmer,
   AppNotification,
-  SlotAvailability,
-  ChatBubble
+  SlotAvailability
 } from '../types';
 import { playQueueChime, playSuccessSound } from '../utils/sound';
 import { INITIAL_CENTRES, INITIAL_TOKENS, MSP_CATALOG, INITIAL_ANNOUNCEMENTS } from '../seedData';
@@ -62,8 +61,8 @@ interface AppContextType {
   setBookingCentre: (c: ProcurementCentre | null) => void;
   viewPassToken: DigitalToken | null;
   setViewPassToken: (t: DigitalToken | null) => void;
-  activeTab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice';
-  setActiveTab: (tab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice') => void;
+  activeTab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin';
+  setActiveTab: (tab: 'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin') => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   selectedCrop: string;
@@ -86,10 +85,6 @@ interface AppContextType {
   broadcastAnnouncement: (data: Partial<Announcement>) => Promise<Announcement>;
   resetDemoData: () => Promise<void>;
   setActiveToken: (token: DigitalToken | null) => void;
-  // Voice Chat History Persistence
-  voiceHistory: ChatBubble[];
-  addVoiceMessages: (msgs: ChatBubble[]) => void;
-  clearVoiceHistory: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -142,10 +137,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { 'Content-Type': 'application/json', 'x-admin-pin': pin };
   };
 
+  const authHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('kisanh_auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const pin = sessionStorage.getItem('kisanh_admin_pin');
+    if (pin) {
+      headers['x-admin-pin'] = pin;
+    }
+    return headers;
+  };
+
   const [selectedCentre, setSelectedCentre] = useState<ProcurementCentre | null>(null);
   const [bookingCentre, setBookingCentre] = useState<ProcurementCentre | null>(null);
   const [viewPassToken, setViewPassToken] = useState<DigitalToken | null>(null);
-  const [activeTab, setActiveTab] = useState<'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin' | 'voice'>('centres');
+  const [activeTab, setActiveTab] = useState<'centres' | 'map' | 'prices' | 'queue' | 'analytics' | 'admin'>('centres');
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -156,41 +164,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loading, setLoading] = useState<boolean>(false);
 
   const registerMyTokenNumber = (tokenNumber: string) => {
+    if (!farmer?.phone) return;
     try {
-      const myTokenNumbers: string[] = JSON.parse(localStorage.getItem('kisanh_my_token_numbers') || '[]');
+      const key = `kisanh_my_tokens_${farmer.phone}`;
+      const myTokenNumbers: string[] = JSON.parse(localStorage.getItem(key) || '[]');
       if (!myTokenNumbers.includes(tokenNumber)) {
         myTokenNumbers.unshift(tokenNumber);
-        localStorage.setItem('kisanh_my_token_numbers', JSON.stringify(myTokenNumbers));
+        localStorage.setItem(key, JSON.stringify(myTokenNumbers));
       }
     } catch (e) {}
   };
 
   const setActiveToken = (token: DigitalToken | null) => {
     setActiveTokenState(token);
-    if (token) {
-      localStorage.setItem('kisanh_active_token', JSON.stringify(token));
-      registerMyTokenNumber(token.tokenNumber);
-    } else {
-      localStorage.removeItem('kisanh_active_token');
+    if (farmer?.phone) {
+      const key = `kisanh_active_token_${farmer.phone}`;
+      if (token) {
+        localStorage.setItem(key, JSON.stringify(token));
+        registerMyTokenNumber(token.tokenNumber);
+      } else {
+        localStorage.removeItem(key);
+      }
     }
   };
 
-  // Compute list of all active tokens belonging to this farmer / browser session
+  // Compute list of all active tokens belonging strictly to this logged in farmer
   const myActiveTokens = React.useMemo(() => {
+    if (!farmer?.phone) return [];
+    const farmerPhone = farmer.phone;
     let myTokenNumbers: string[] = [];
     try {
-      myTokenNumbers = JSON.parse(localStorage.getItem('kisanh_my_token_numbers') || '[]');
+      myTokenNumbers = JSON.parse(localStorage.getItem(`kisanh_my_tokens_${farmerPhone}`) || '[]');
     } catch (e) {}
-    const farmerPhone = farmer?.phone;
 
     return allTokens.filter(t => {
       if (t.status === 'COMPLETED' || t.status === 'CANCELLED') return false;
+      if (t.phone === farmerPhone) return true;
       if (myTokenNumbers.includes(t.tokenNumber)) return true;
-      if (farmerPhone && t.phone === farmerPhone) return true;
-      if (activeToken && t.tokenNumber === activeToken.tokenNumber) return true;
       return false;
     });
-  }, [allTokens, farmer?.phone, activeToken]);
+  }, [allTokens, farmer?.phone]);
 
   // Fetch Centres
   const fetchCentres = useCallback(async () => {
@@ -235,8 +248,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Fetch Tokens
   const fetchTokens = useCallback(async () => {
     let tokensList: DigitalToken[] = [];
+    const currentPhone = farmer?.phone;
+    const adminPin = sessionStorage.getItem('kisanh_admin_pin');
+    const authToken = localStorage.getItem('kisanh_auth_token');
+
+    // Without logged in farmer/token and without officer admin PIN, keep tokens empty
+    if (!currentPhone && !adminPin && !authToken) {
+      setAllTokens([]);
+      setActiveTokenState(null);
+      return;
+    }
+
     try {
-      const res = await fetch('/api/tokens');
+      const url = currentPhone ? `/api/tokens?phone=${encodeURIComponent(currentPhone)}` : '/api/tokens';
+      const res = await fetch(url, { headers: authHeaders() });
+
+      if (res.status === 401 && !adminPin) {
+        // Token expired or unauthenticated
+        setAllTokens([]);
+        setActiveTokenState(null);
+        return;
+      }
+
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -244,40 +277,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     } catch (e) {
-      // offline / client fallback
-    }
-
-    if (tokensList.length === 0) {
-      const savedTokens = localStorage.getItem('kisanh_tokens_list');
-      tokensList = savedTokens ? JSON.parse(savedTokens) : (INITIAL_TOKENS as unknown as DigitalToken[]);
+      // offline fallback
     }
 
     setAllTokens(tokensList);
 
-    // Synchronize and restore active token on reload
-    const savedActiveRaw = localStorage.getItem('kisanh_active_token');
-    const savedActive: DigitalToken | null = savedActiveRaw ? JSON.parse(savedActiveRaw) : null;
-    const currentPhone = farmer?.phone;
-
-    const targetTokenNumber = activeToken?.tokenNumber || savedActive?.tokenNumber;
-
-    let matched: DigitalToken | undefined;
-    if (targetTokenNumber) {
-      matched = tokensList.find(t => t.tokenNumber === targetTokenNumber);
+    if (currentPhone) {
+      const savedActiveRaw = localStorage.getItem(`kisanh_active_token_${currentPhone}`);
+      const savedActive: DigitalToken | null = savedActiveRaw ? JSON.parse(savedActiveRaw) : null;
+      let matched = tokensList.find(t => t.phone === currentPhone && !['COMPLETED', 'CANCELLED'].includes(t.status));
+      if (!matched && savedActive && savedActive.phone === currentPhone) {
+        matched = savedActive;
+      }
+      setActiveTokenState(matched || null);
+    } else {
+      setActiveTokenState(null);
     }
-
-    // Fallback: look up latest non-cancelled token for logged-in farmer if available
-    if (!matched && currentPhone) {
-      matched = tokensList.find(t => t.phone === currentPhone && !['COMPLETED', 'CANCELLED'].includes(t.status));
-    }
-
-    if (matched) {
-      setActiveTokenState(matched);
-      localStorage.setItem('kisanh_active_token', JSON.stringify(matched));
-    } else if (savedActive) {
-      setActiveTokenState(savedActive);
-    }
-  }, [activeToken?.tokenNumber, farmer?.phone]);
+  }, [farmer?.phone]);
 
   // Fetch Announcements
   const fetchAnnouncements = useCallback(async () => {
@@ -405,19 +421,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  // Book Token
+  // Book Token (Requires Farmer Authentication)
   const bookToken = async (data: Partial<DigitalToken>): Promise<DigitalToken> => {
+    if (!farmer) {
+      throw new Error('Authentication Required: You must be logged in with your phone number to book a procurement slot pass.');
+    }
     let response: Response;
     try {
       response = await fetch('/api/tokens', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        headers: authHeaders(),
+        body: JSON.stringify({
+          ...data,
+          phone: farmer.phone,
+          farmerName: data.farmerName || farmer.name
+        })
       });
     } catch (networkErr) {
       // The fetch itself failed (server unreachable / offline) — fall through
-      // to the local demo booking below so the app keeps working for farmers
-      // on flaky rural connectivity.
+      // to local fallback.
       response = null as unknown as Response;
     }
 
@@ -612,6 +634,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const json = await res.json();
     if (!json.success) throw new Error(json.message || 'OTP verification failed');
 
+    if (json.token) {
+      localStorage.setItem('kisanh_auth_token', json.token);
+    }
+
     // Wipe previous session's active tokens and token numbers
     localStorage.removeItem('kisanh_active_token');
     localStorage.removeItem('kisanh_my_token_numbers');
@@ -628,13 +654,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logoutFarmer = async () => {
+    try {
+      await fetch('/api/farmers/logout', {
+        method: 'POST',
+        headers: authHeaders()
+      });
+    } catch (e) {}
+
     setFarmer(null);
     setActiveToken(null);
     setViewPassToken(null);
+    setAllTokens([]);
     setNotifications([]);
     localStorage.removeItem('kisanh_farmer');
-    localStorage.removeItem('kisanh_active_token');
-    localStorage.removeItem('kisanh_my_token_numbers');
+    localStorage.removeItem('kisanh_auth_token');
     try {
       await logoutFirebaseUser();
     } catch (e) {
@@ -647,7 +680,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const phone = phoneOverride || farmer?.phone;
     if (!phone) return;
     try {
-      const res = await fetch(`/api/notifications?phone=${encodeURIComponent(phone)}`);
+      const res = await fetch(`/api/notifications`, { headers: authHeaders() });
       if (!res.ok) return;
       const json = await res.json();
       if (json.success) setNotifications(json.data);
@@ -659,7 +692,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const markNotificationRead = async (id: string): Promise<void> => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+      await fetch(`/api/notifications/${id}/read`, { method: 'PATCH', headers: authHeaders() });
     } catch (e) {
       // best-effort
     }
@@ -671,7 +704,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await fetch('/api/notifications/read-all', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ phone: farmer.phone })
       });
     } catch (e) {
@@ -706,86 +739,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logoutAdmin = () => {
     sessionStorage.removeItem('kisanh_admin_pin');
     setIsAdminAuthed(false);
-  };
-
-  // --- Voice Chat History Persistence ---
-  const INITIAL_WELCOME_MSG: ChatBubble = {
-    id: '1',
-    sender: 'ai',
-    text: 'नमस्ते! मैं किसान मदद वॉइस AI असिस्टेंट हूँ। आप मुझसे बोलकर किसी भी मंडी का टोकन बुक कर सकते हैं, भाव जान सकते हैं या टोकन स्टेटस पूछ सकते हैं।',
-    subtextEn: 'Hello! I am Kisan Madad Voice AI Assistant. You can speak to book tokens for any mandi, check MSP rates, or track queue status.',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    actionTaken: 'SYSTEM_READY'
-  };
-
-  const [voiceHistory, setVoiceHistoryState] = useState<ChatBubble[]>(() => {
-    const phone = farmer?.phone || 'default';
-    const saved = localStorage.getItem(`kisanh_voice_history_${phone}`);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
-    return [INITIAL_WELCOME_MSG];
-  });
-
-  const fetchVoiceHistory = useCallback(async (phoneOverride?: string) => {
-    const phone = phoneOverride || farmer?.phone || 'default';
-    const saved = localStorage.getItem(`kisanh_voice_history_${phone}`);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setVoiceHistoryState(parsed);
-        } else {
-          setVoiceHistoryState([INITIAL_WELCOME_MSG]);
-        }
-      } catch (e) {
-        setVoiceHistoryState([INITIAL_WELCOME_MSG]);
-      }
-    } else {
-      setVoiceHistoryState([INITIAL_WELCOME_MSG]);
-    }
-
-    try {
-      const res = await fetch(`/api/voice/history?phone=${encodeURIComponent(phone)}`);
-      if (!res.ok) return;
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-        setVoiceHistoryState(json.data);
-        localStorage.setItem(`kisanh_voice_history_${phone}`, JSON.stringify(json.data));
-      }
-    } catch (e) {
-      // ignore network failure
-    }
-  }, [farmer?.phone]);
-
-  useEffect(() => {
-    fetchVoiceHistory();
-  }, [fetchVoiceHistory]);
-
-  const addVoiceMessages = (newMsgs: ChatBubble[]) => {
-    setVoiceHistoryState(prev => {
-      const updated = [...prev, ...newMsgs];
-      const phone = farmer?.phone || 'default';
-      localStorage.setItem(`kisanh_voice_history_${phone}`, JSON.stringify(updated));
-      fetch('/api/voice/history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, messages: updated })
-      }).catch(() => {});
-      return updated;
-    });
-  };
-
-  const clearVoiceHistory = async () => {
-    setVoiceHistoryState([INITIAL_WELCOME_MSG]);
-    const phone = farmer?.phone || 'default';
-    localStorage.setItem(`kisanh_voice_history_${phone}`, JSON.stringify([INITIAL_WELCOME_MSG]));
-    try {
-      await fetch(`/api/voice/history?phone=${encodeURIComponent(phone)}`, { method: 'DELETE' });
-    } catch (e) {}
   };
 
   // Poll notifications for a logged-in farmer alongside the other live data
@@ -853,10 +806,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCentreCrop,
         broadcastAnnouncement,
         resetDemoData,
-        setActiveToken,
-        voiceHistory,
-        addVoiceMessages,
-        clearVoiceHistory
+        setActiveToken
       }}
     >
       {children}

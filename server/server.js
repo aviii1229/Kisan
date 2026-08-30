@@ -2,9 +2,11 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { db } from './db.js';
+import { createJWT, requireAuthMiddleware } from './auth.js';
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const requireAuth = requireAuthMiddleware(db);
 
 // Officer/Admin Portal PIN. Change this via an environment variable in production
 // (e.g. `ADMIN_PIN=482913 npm run server`). Defaults to 1234 for the hackathon demo.
@@ -105,10 +107,18 @@ app.post('/api/centres/:id/crops', requireAdminPin, (req, res) => {
 
 // --- DIGITAL TOKENS & QUEUE ENDPOINTS ---
 
-// GET /api/tokens - List or filter tokens
-app.get('/api/tokens', (req, res) => {
+// GET /api/tokens - List or filter tokens (Protected & User-Scoped)
+app.get('/api/tokens', requireAuth, (req, res) => {
   try {
-    const { centreId, phone, status } = req.query;
+    let { centreId, status } = req.query;
+    let phone = req.query.phone;
+
+    // User-scoped data isolation (IDOR protection):
+    // Non-admin farmers can ONLY access their own tokens belonging to req.user.phone
+    if (!req.isAdmin) {
+      phone = req.user.phone;
+    }
+
     const tokens = db.getTokens({ centreId, phone, status });
     res.json({ success: true, count: tokens.length, data: tokens });
   } catch (error) {
@@ -116,26 +126,43 @@ app.get('/api/tokens', (req, res) => {
   }
 });
 
-// GET /api/tokens/:tokenNumber - Get specific token
-app.get('/api/tokens/:tokenNumber', (req, res) => {
+// GET /api/tokens/:tokenNumber - Get specific token (Protected & User-Scoped)
+app.get('/api/tokens/:tokenNumber', requireAuth, (req, res) => {
   try {
     const token = db.getTokenByNumber(req.params.tokenNumber);
     if (!token) {
       return res.status(404).json({ success: false, message: 'Token not found' });
     }
+
+    // IDOR Protection: Must be token owner or officer admin
+    if (!req.isAdmin && token.phone !== req.user.phone) {
+      return res.status(403).json({ success: false, message: 'Access Denied: You do not have permission to view this token pass.' });
+    }
+
     res.json({ success: true, data: token });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/tokens - Generate / Book a new digital token
-app.post('/api/tokens', (req, res) => {
+// POST /api/tokens - Generate / Book a new digital token (Requires Authenticated Session/JWT)
+app.post('/api/tokens', requireAuth, (req, res) => {
   try {
-    const { farmerName, farmerName_te, phone, centreId, cropId, quantityQuintals, vehicleType, vehicleNumber, slotDate, slotTime, aadhaarLast4, passbookNo } = req.body;
+    let { farmerName, farmerName_te, phone, centreId, cropId, quantityQuintals, vehicleType, vehicleNumber, slotDate, slotTime, aadhaarLast4, passbookNo } = req.body;
+
+    // Backend enforcement: Bind booking strictly to authenticated user's identity
+    if (!req.isAdmin) {
+      phone = req.user.phone;
+      farmerName = farmerName || req.user.name || 'Farmer';
+    }
 
     if (!farmerName || !phone || !centreId || !cropId) {
       return res.status(400).json({ success: false, message: 'Missing required fields (farmerName, phone, centreId, cropId)' });
+    }
+
+    const registeredFarmer = db.getFarmerByPhone(phone);
+    if (!registeredFarmer) {
+      return res.status(401).json({ success: false, message: 'Authentication required: Please log in with your phone number to book a token.' });
     }
 
     const token = db.createToken({
@@ -159,9 +186,6 @@ app.post('/api/tokens', (req, res) => {
       data: token
     });
   } catch (error) {
-    // Slot-full / duplicate-booking errors carry their own status (409) and a
-    // farmer-facing message set in db.createToken; anything else is a real
-    // server error.
     res.status(error.status || 500).json({ success: false, message: error.message, code: error.code });
   }
 });
@@ -256,11 +280,9 @@ app.get('/api/analytics', (req, res) => {
   }
 });
 
-// --- FARMER REGISTRATION, LOGIN (OTP) & PROFILE ---
+// --- FARMER REGISTRATION, LOGIN (OTP), LOGOUT & PROFILE ---
 
 // POST /api/farmers/otp/request - Request a login/registration OTP for a phone number.
-// DEMO NOTE: No real SMS gateway is configured, so the OTP is returned in the response
-// (and logged server-side) instead of being delivered over SMS. See db.requestOtp().
 app.post('/api/farmers/otp/request', (req, res) => {
   try {
     const { phone } = req.body;
@@ -280,7 +302,7 @@ app.post('/api/farmers/otp/request', (req, res) => {
   }
 });
 
-// POST /api/farmers/otp/verify - Verify OTP and log in / register the farmer.
+// POST /api/farmers/otp/verify - Verify OTP and issue JWT session token.
 app.post('/api/farmers/otp/verify', (req, res) => {
   try {
     const { phone, otp, name, village, district, preferredLanguage } = req.body;
@@ -293,15 +315,35 @@ app.post('/api/farmers/otp/verify', (req, res) => {
     }
     const farmer = db.getOrCreateFarmer({ name, phone, village, district, preferredLanguage });
     db.persist();
-    res.json({ success: true, message: 'Login successful', data: farmer });
+
+    // Create signed JWT session token (valid for 7 days)
+    const token = createJWT({ id: farmer.id, phone: farmer.phone, name: farmer.name });
+
+    res.json({ success: true, message: 'Login successful', data: farmer, token });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// GET /api/farmers/:phone - Fetch a farmer profile
-app.get('/api/farmers/:phone', (req, res) => {
+// POST /api/farmers/logout - Invalidate current session JWT token
+app.post('/api/farmers/logout', requireAuth, (req, res) => {
   try {
+    if (req.user && req.user.jti) {
+      db.invalidateToken(req.user.jti);
+    }
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/farmers/:phone - Fetch a farmer profile (Protected & User-Scoped)
+app.get('/api/farmers/:phone', requireAuth, (req, res) => {
+  try {
+    // IDOR protection: Farmer can only access their own profile unless admin
+    if (!req.isAdmin && req.params.phone !== req.user.phone) {
+      return res.status(403).json({ success: false, message: 'Access Denied: You can only view your own farmer profile.' });
+    }
     const farmer = db.getFarmerByPhone(req.params.phone);
     if (!farmer) {
       return res.status(404).json({ success: false, message: 'Farmer not registered' });
@@ -314,12 +356,12 @@ app.get('/api/farmers/:phone', (req, res) => {
 
 // --- NOTIFICATIONS (in-app SMS/Push notification log) ---
 
-// GET /api/notifications?phone=... - Get notification history for a farmer
-app.get('/api/notifications', (req, res) => {
+// GET /api/notifications - Get notification history for authenticated farmer
+app.get('/api/notifications', requireAuth, (req, res) => {
   try {
-    const { phone } = req.query;
+    const phone = req.isAdmin ? (req.query.phone || req.user?.phone) : req.user.phone;
     if (!phone) {
-      return res.status(400).json({ success: false, message: 'phone query param is required' });
+      return res.status(400).json({ success: false, message: 'phone is required' });
     }
     const list = db.getNotifications(phone);
     res.json({ success: true, count: list.length, unread: list.filter(n => !n.read).length, data: list });
@@ -329,8 +371,13 @@ app.get('/api/notifications', (req, res) => {
 });
 
 // PATCH /api/notifications/:id/read - Mark a single notification as read
-app.patch('/api/notifications/:id/read', (req, res) => {
+app.patch('/api/notifications/:id/read', requireAuth, (req, res) => {
   try {
+    const list = db.getNotifications(req.user?.phone || '');
+    const found = list.find(n => n.id === req.params.id);
+    if (!found && !req.isAdmin) {
+      return res.status(403).json({ success: false, message: 'Access Denied: Notification does not belong to user.' });
+    }
     const n = db.markNotificationRead(req.params.id);
     if (!n) return res.status(404).json({ success: false, message: 'Notification not found' });
     res.json({ success: true, data: n });
@@ -339,11 +386,10 @@ app.patch('/api/notifications/:id/read', (req, res) => {
   }
 });
 
-// POST /api/notifications/read-all - Mark all notifications for a phone as read
-app.post('/api/notifications/read-all', (req, res) => {
+// POST /api/notifications/read-all - Mark all notifications for logged in farmer as read
+app.post('/api/notifications/read-all', requireAuth, (req, res) => {
   try {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ success: false, message: 'phone is required' });
+    const phone = req.user.phone;
     const list = db.markAllNotificationsRead(phone);
     res.json({ success: true, data: list });
   } catch (error) {
@@ -361,147 +407,7 @@ app.post('/api/reset', requireAdminPin, (req, res) => {
   }
 });
 
-// --- VOICE CHAT HISTORY PERSISTENCE ENDPOINTS ---
 
-// GET /api/voice/history?phone=... - Fetch saved voice chat history for a farmer/guest
-app.get('/api/voice/history', (req, res) => {
-  try {
-    const phone = req.query.phone || 'default';
-    const history = db.getVoiceHistory(phone);
-    res.json({ success: true, count: history.length, data: history });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// POST /api/voice/history - Save or append voice chat history
-app.post('/api/voice/history', (req, res) => {
-  try {
-    const { phone = 'default', message, messages } = req.body;
-    let history;
-    if (messages && Array.isArray(messages)) {
-      history = db.saveVoiceHistory(phone, messages);
-    } else if (message) {
-      history = db.appendVoiceMessage(phone, message);
-    } else {
-      return res.status(400).json({ success: false, message: 'message or messages required' });
-    }
-    res.json({ success: true, count: history.length, data: history });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// DELETE /api/voice/history?phone=... - Clear voice chat history
-app.delete('/api/voice/history', (req, res) => {
-  try {
-    const phone = req.query.phone || req.body?.phone || 'default';
-    db.clearVoiceHistory(phone);
-    res.json({ success: true, message: 'Voice chat history cleared' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// --- SARVAM AI HINDI & INDIC VOICE ASSISTANT ENDPOINTS ---
-
-// POST /api/sarvam/tts - Convert Hindi/Indic text to natural speech using Sarvam AI (Bulbul)
-app.post('/api/sarvam/tts', async (req, res) => {
-  try {
-    const { text, target_language_code = 'hi-IN', speaker = 'priya', pace = 0.95, pitch = 0 } = req.body;
-    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY || 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q';
-
-    if (!apiKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'No Sarvam AI API Key provided. Provide X-Sarvam-Api-Key header or SARVAM_API_KEY env var.'
-      });
-    }
-
-    // List of compatible speakers for Sarvam bulbul:v3
-    const validBulbulV3Speakers = ['priya', 'ritu', 'kavya', 'shreya', 'roopa', 'shubh', 'arvind', 'ratan', 'pooja', 'rahul', 'aditya', 'ashutosh', 'neha'];
-    const chosenSpeaker = validBulbulV3Speakers.includes(speaker?.toLowerCase()) ? speaker.toLowerCase() : 'priya';
-
-    const payload = {
-      inputs: [text],
-      target_language_code,
-      speaker: chosenSpeaker,
-      pace: typeof pace === 'number' ? pace : parseFloat(pace) || 0.95,
-      speech_sample_rate: 22050,
-      enable_preprocessing: true,
-      model: 'bulbul:v3'
-    };
-
-    if (pitch !== undefined && pitch !== 0) {
-      payload.pitch = typeof pitch === 'number' ? pitch : parseFloat(pitch);
-    }
-
-    const sarvamRes = await fetch('https://api.sarvam.ai/text-to-speech', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-subscription-key': apiKey
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const json = await sarvamRes.json();
-    if (!sarvamRes.ok) {
-      return res.status(sarvamRes.status).json({ success: false, message: json.message || 'Sarvam AI TTS Error', error: json });
-    }
-
-    res.json({ success: true, audioBase64: json.audios ? json.audios[0] : null, model: payload.model, speaker: payload.speaker });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// POST /api/sarvam/stt - Transcribe Hindi audio using Sarvam AI (Saarika)
-app.post('/api/sarvam/stt', async (req, res) => {
-  try {
-    const { audioBase64, language_code = 'hi-IN' } = req.body;
-    const apiKey = req.headers['x-sarvam-api-key'] || process.env.SARVAM_API_KEY || 'sk_pp61jsrl_xeCHA8qZTlH96EKPQ1i4wJ5q';
-
-    if (!apiKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'No Sarvam AI API Key provided. Provide X-Sarvam-Api-Key header or SARVAM_API_KEY env var.'
-      });
-    }
-
-    // Convert base64 audio to form-data for Sarvam AI Saarika endpoint
-    const buffer = Buffer.from(audioBase64.replace(/^data:audio\/\w+;base64,/, ''), 'base64');
-    const BlobClass = globalThis.Blob;
-    const FormDataClass = globalThis.FormData;
-
-    if (!FormDataClass) {
-      return res.status(500).json({ success: false, message: 'FormData not available on server' });
-    }
-
-    const form = new FormDataClass();
-    const audioBlob = new BlobClass([buffer], { type: 'audio/wav' });
-    form.append('file', audioBlob, 'speech.wav');
-    form.append('model', 'saarika:v2');
-    form.append('language_code', language_code);
-
-    const sarvamRes = await fetch('https://api.sarvam.ai/speech-to-text', {
-      method: 'POST',
-      headers: {
-        'api-subscription-key': apiKey
-      },
-      body: form
-    });
-
-    const json = await sarvamRes.json();
-    if (!sarvamRes.ok) {
-      return res.status(sarvamRes.status).json({ success: false, message: json.message || 'Sarvam AI STT Error', error: json });
-    }
-
-    res.json({ success: true, transcript: json.transcript, model: 'saarika:v2' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 // Serve static files from the React dist directory if it exists
 import path from 'path';

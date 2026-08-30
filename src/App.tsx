@@ -5,7 +5,6 @@ import { useLanguage } from './context/LanguageContext';
 // Components
 import { Navbar } from './components/Navbar';
 import { AlertBanner } from './components/AlertBanner';
-import { VoiceAssistant } from './components/VoiceAssistant';
 import { CentreCard } from './components/CentreCard';
 import { CentreDetailModal } from './components/CentreDetailModal';
 import { MandiMapView } from './components/MandiMapView';
@@ -17,8 +16,6 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminPinGate } from './components/AdminPinGate';
 import { FarmerAuthModal } from './components/FarmerAuthModal';
 import { TokenPassModal } from './components/TokenPassModal';
-import { FloatingVoiceAssistant } from './components/FloatingVoiceAssistant';
-import { VoiceAssistantPage } from './components/VoiceAssistantPage';
 
 // Icons
 import { Landmark, Search, MapPin, Globe, Sparkles, AlertCircle, SlidersHorizontal } from 'lucide-react';
@@ -293,7 +290,6 @@ export const App: React.FC = () => {
                   
                   {/* Left Column Widgets */}
                   <div className="lg:col-span-1 space-y-6">
-                    <VoiceAssistant />
                     
                     {/* Welcome card */}
                     <div className="bg-gradient-to-br from-agri-700 to-agri-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
@@ -359,8 +355,6 @@ export const App: React.FC = () => {
             {activeTab === 'queue' && <LiveQueueTracker />}
 
             {activeTab === 'analytics' && <AnalyticsModal />}
-
-            {activeTab === 'voice' && <VoiceAssistantPage />}
           </>
         )}
       </main>
@@ -400,15 +394,6 @@ export const App: React.FC = () => {
           onClose={() => setViewPassToken(null)}
         />
       )}
-
-      {/* Global Floating Voice AI Assistant */}
-      <FloatingVoiceAssistant
-        onOpenBookingModal={() => {
-          if (!bookingCentre && centres.length > 0) {
-            setBookingCentre(centres[0]);
-          }
-        }}
-      />
     </div>
   );
 };

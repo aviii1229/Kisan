@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Ticket, Scale, DollarSign, Clock, HelpCircle, Landmark } from 'lucide-react';
+import { CheckCircle2, Ticket, Scale, DollarSign, Clock, HelpCircle, Landmark, Lock, User, LogIn } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
 export const LiveQueueTracker: React.FC = () => {
-  const { activeToken, setActiveToken, myActiveTokens, allTokens, centres, setViewPassToken } = useApp();
+  const { activeToken, setActiveToken, myActiveTokens, allTokens, centres, setViewPassToken, farmer } = useApp();
   const { lang, t } = useLanguage();
 
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
@@ -181,6 +181,22 @@ export const LiveQueueTracker: React.FC = () => {
                   )}
                 </div>
               )}
+            </div>
+          ) : !farmer ? (
+            <div className="bg-gradient-to-br from-slate-50 to-amber-50 border-2 border-dashed border-amber-300/60 rounded-3xl p-10 shadow-sm text-center space-y-5 paper-bg-texture">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-display font-black text-slate-900 text-lg">Login Required to View Tokens</h3>
+                <p className="text-xs text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed font-semibold">
+                  Your procurement tokens, queue position, and delivery pass data are private. Please log in with your registered phone number to access your tokens.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-bold">
+                <Lock className="w-3 h-3" />
+                <span>Data is encrypted and visible only to you</span>
+              </div>
             </div>
           ) : (
             <div className="bg-[#FFFDF8] border border-slate-200 rounded-3xl p-10 shadow-sm text-center space-y-4 paper-bg-texture">

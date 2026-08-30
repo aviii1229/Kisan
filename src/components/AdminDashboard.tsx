@@ -27,6 +27,7 @@ export const AdminDashboard: React.FC = () => {
   const {
     centres,
     allTokens,
+    mspCatalog,
     updateCentreStatus,
     updateCentreCrop,
     updateTokenStatus,
@@ -111,7 +112,10 @@ export const AdminDashboard: React.FC = () => {
 
   const handleProcessWeighment = async (token: DigitalToken) => {
     const wt = parseFloat(weightVal) || token.quantityQuintals;
-    const rate = 2820; // MSP 2320 + 500
+    const cropObj = mspCatalog.find((c: any) => c.id === token.cropId);
+    const mspPrice = cropObj ? cropObj.msp : 2389;
+    const bonusPrice = (token.cropId === 'paddy-grade-a' || token.cropId === 'paddy-common') ? 500 : 0;
+    const rate = mspPrice + bonusPrice;
     const netAmount = Math.round(wt * rate);
 
     await updateTokenStatus(token.tokenNumber, {

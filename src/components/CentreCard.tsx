@@ -158,14 +158,17 @@ export const CentreCard: React.FC<CentreCardProps> = ({ centre, onOpenDetails, o
 
         <button
           onClick={() => onOpenBooking(centre)}
-          disabled={centre.status === 'closed' || centre.status === 'quota_full'}
+          disabled={!farmer || centre.status === 'closed' || centre.status === 'quota_full'}
+          title={!farmer ? 'Login required to book tokens' : ''}
           className={`py-2.5 px-3 text-xs font-extrabold rounded-xl flex items-center justify-center gap-1 transition-all btn-active-press cursor-pointer border ${
-            centre.status === 'closed' || centre.status === 'quota_full'
+            !farmer
+              ? 'bg-amber-50 text-amber-600 border-amber-200 cursor-not-allowed'
+              : centre.status === 'closed' || centre.status === 'quota_full'
               ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
               : 'bg-gradient-to-r from-agri-700 via-agri-600 to-teal-700 hover:from-agri-600 hover:to-teal-600 text-white border-agri-800 shadow-md shadow-agri-700/20 scale-[1.01]'
           }`}
         >
-          {t('bookTokenBtn')}
+          {!farmer ? '🔒 Login to Book' : t('bookTokenBtn')}
         </button>
       </div>
     </div>

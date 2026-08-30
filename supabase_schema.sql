@@ -182,10 +182,10 @@ CREATE POLICY "Allow public write voice_history" ON public.voice_history FOR ALL
 -- ==============================================================================
 INSERT INTO public.msp_catalog ("id", "name", "name_te", "name_hi", "msp", "marketAvg", "unit", "category", "maxMoisture", "season", "priceTrend", "icon")
 VALUES 
-('paddy-common', 'Paddy (Common)', 'వరి (సాధారణ రకం)', 'धान (सामान्य)', 2300, 2180, 'Quintal', 'Cereals', 17, 'Kharif 2026', '+5.4% YoY', '🌾'),
+('paddy-common', 'Paddy (Common)', 'వరి (సాధారణ రకం)', 'धान (सामान्य)', 2369, 2180, 'Quintal', 'Cereals', 17, 'Kharif 2026', '+5.4% YoY', '🌾'),
 ('paddy-grade-a', 'Paddy (Grade A / Sona Masoori)', 'వరి (గ్రేడ్-ఎ / సోనా మసూరి)', 'धान (ग्रेड-ए / सोना मसूरी)', 2320, 2450, 'Quintal', 'Cereals', 17, 'Kharif 2026', '+5.8% YoY', '🌾'),
-('cotton-long', 'Cotton (Long Staple)', 'పత్తి (పొడుగు పింజ)', 'कपास (लंबा रेशा)', 7521, 7350, 'Quintal', 'Fiber', 12, 'Kharif 2026', '+7.2% YoY', '☁️'),
-('maize', 'Maize (Corn)', 'మొక్కజొన్న', 'मक्का', 2225, 2100, 'Quintal', 'Cereals', 14, 'Kharif 2026', '+6.1% YoY', '🌽'),
-('soyabean', 'Soyabean (Yellow)', 'సోయాబీన్ (పసుపు)', 'सोयाबीन (पीला)', 4892, 4650, 'Quintal', 'Oilseeds', 12, 'Kharif 2026', '+4.9% YoY', '🌱'),
+('cotton-long', 'Cotton (Long Staple)', 'పత్తి (పొడుగు పింజ)', 'कपास (लंबा रेशा)', 8110, 7350, 'Quintal', 'Fiber', 12, 'Kharif 2026', '+7.2% YoY', '☁️'),
+('maize', 'Maize (Corn)', 'మొక్కజొన్న', 'मक्का', 2400, 2100, 'Quintal', 'Cereals', 14, 'Kharif 2026', '+6.1% YoY', '🌽'),
+('soyabean', 'Soyabean (Yellow)', 'సోయాబీన్ (పసుపు)', 'सोयाबीन (पीला)', 5328, 4650, 'Quintal', 'Oilseeds', 12, 'Kharif 2026', '+4.9% YoY', '🌱'),
 ('chilli', 'Red Chilli (Teja / Guntur)', 'ఎండు మిర్చి (తేజ / గుంటూరు)', 'लाल मिर्च (తేజ / గుంటూరు)', 18500, 19800, 'Quintal', 'Spices', 10, 'Rabi 2026', '+12.4% YoY', '🌶️')
 ON CONFLICT ("id") DO NOTHING;
