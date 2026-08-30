@@ -33,8 +33,13 @@ kisan-h/
 ├── server/
 │   ├── server.js               # Express REST API & SPA Static Server
 │   ├── db.js                   # Persisted store: centres, tokens, farmers, OTP & notifications
-│   ├── data.json                # Auto-generated on first run — the persisted database
+│   ├── supabase.js             # Online Supabase PostgreSQL integration service
+│   ├── seedSupabase.js         # Online database seeding script
+│   ├── data.json               # Auto-generated on first run — local fallback database
 │   └── seedData.js             # Pre-seeded Mandis, MSP catalog, tokens & alerts
+├── supabase_schema.sql         # Supabase PostgreSQL Database Schema
+├── SUPABASE_CONNECT_GUIDE.md   # Step-by-Step Supabase Connection & Setup Guide
+├── FIREBASE_AUTH_GUIDE.md      # Step-by-Step Firebase Authentication Guide
 ├── src/
 │   ├── main.tsx
 │   ├── App.tsx

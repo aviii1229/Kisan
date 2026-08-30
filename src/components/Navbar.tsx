@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, X, Landmark, User, Map, LineChart, FileText, Settings, Globe, Shield, Mic, Sparkles } from 'lucide-react';
+import { Menu, X, Landmark, User, Map, LineChart, FileText, Settings, Globe, Shield, Mic, Sparkles, Ticket } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 import { NotificationBell } from './NotificationBell';
@@ -11,7 +11,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenLogin, onOpenAdminGate }) => {
-  const { activeTab, setActiveTab, farmer, logoutFarmer, isAdminAuthed, logoutAdmin, userRole, setUserRole } = useApp();
+  const { activeTab, setActiveTab, farmer, logoutFarmer, isAdminAuthed, logoutAdmin, userRole, setUserRole, activeToken, myActiveTokens, setViewPassToken } = useApp();
   const { lang, setLang, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -144,6 +144,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLogin, onOpenAdminGate }) 
 
               {/* Notification Bell */}
               <NotificationBell />
+
+              {/* Active Token E-Pass Quick Button */}
+              {(activeToken || myActiveTokens.length > 0) && (
+                <button
+                  onClick={() => setViewPassToken(activeToken || myActiveTokens[0])}
+                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all btn-active-press flex items-center gap-1.5 cursor-pointer border border-amber-600 animate-fadeIn"
+                  title="View Active Digital Token E-Pass"
+                >
+                  <Ticket className="w-3.5 h-3.5 text-white" />
+                  <span className="hidden sm:inline font-mono">{activeToken ? activeToken.tokenNumber : myActiveTokens[0]?.tokenNumber}</span>
+                  <span className="text-[9px] bg-white/20 px-1 rounded uppercase tracking-wider font-extrabold">
+                    {myActiveTokens.length > 1 ? `${myActiveTokens.length} Passes` : 'Pass'}
+                  </span>
+                </button>
+              )}
 
               {/* Farmer Account / Auth Button */}
               {farmer ? (

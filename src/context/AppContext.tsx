@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { playQueueChime, playSuccessSound } from '../utils/sound';
 import { INITIAL_CENTRES, INITIAL_TOKENS, MSP_CATALOG, INITIAL_ANNOUNCEMENTS } from '../seedData';
+import { logoutFirebaseUser } from '../lib/firebaseAuth';
 
 // Mirrors server/db.js's STANDARD_SLOTS — kept here too so the offline
 // fallback path can still render a sensible slot picker without a network call.
@@ -30,6 +31,7 @@ export const STANDARD_SLOTS = [
 interface AppContextType {
   centres: ProcurementCentre[];
   activeToken: DigitalToken | null;
+  myActiveTokens: DigitalToken[];
   allTokens: DigitalToken[];
   mspCatalog: MspCatalogItem[];
   announcements: Announcement[];
@@ -153,14 +155,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedRadius, setSelectedRadius] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(false);
 
+  const registerMyTokenNumber = (tokenNumber: string) => {
+    try {
+      const myTokenNumbers: string[] = JSON.parse(localStorage.getItem('kisanh_my_token_numbers') || '[]');
+      if (!myTokenNumbers.includes(tokenNumber)) {
+        myTokenNumbers.unshift(tokenNumber);
+        localStorage.setItem('kisanh_my_token_numbers', JSON.stringify(myTokenNumbers));
+      }
+    } catch (e) {}
+  };
+
   const setActiveToken = (token: DigitalToken | null) => {
     setActiveTokenState(token);
     if (token) {
       localStorage.setItem('kisanh_active_token', JSON.stringify(token));
+      registerMyTokenNumber(token.tokenNumber);
     } else {
       localStorage.removeItem('kisanh_active_token');
     }
   };
+
+  // Compute list of all active tokens belonging to this farmer / browser session
+  const myActiveTokens = React.useMemo(() => {
+    let myTokenNumbers: string[] = [];
+    try {
+      myTokenNumbers = JSON.parse(localStorage.getItem('kisanh_my_token_numbers') || '[]');
+    } catch (e) {}
+    const farmerPhone = farmer?.phone;
+
+    return allTokens.filter(t => {
+      if (t.status === 'COMPLETED' || t.status === 'CANCELLED') return false;
+      if (myTokenNumbers.includes(t.tokenNumber)) return true;
+      if (farmerPhone && t.phone === farmerPhone) return true;
+      if (activeToken && t.tokenNumber === activeToken.tokenNumber) return true;
+      return false;
+    });
+  }, [allTokens, farmer?.phone, activeToken]);
 
   // Fetch Centres
   const fetchCentres = useCallback(async () => {
@@ -204,26 +234,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Fetch Tokens
   const fetchTokens = useCallback(async () => {
+    let tokensList: DigitalToken[] = [];
     try {
       const res = await fetch('/api/tokens');
-      if (!res.ok) throw new Error('API not available');
-      const json = await res.json();
-      if (json.success) {
-        setAllTokens(json.data);
-        if (activeToken) {
-          const updated = json.data.find((t: DigitalToken) => t.tokenNumber === activeToken.tokenNumber);
-          if (updated) {
-            setActiveTokenState(updated);
-            localStorage.setItem('kisanh_active_token', JSON.stringify(updated));
-          }
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          tokensList = json.data;
         }
       }
     } catch (e) {
-      const savedTokens = localStorage.getItem('kisanh_tokens_list');
-      const tokensList = savedTokens ? JSON.parse(savedTokens) : (INITIAL_TOKENS as unknown as DigitalToken[]);
-      setAllTokens(tokensList);
+      // offline / client fallback
     }
-  }, [activeToken]);
+
+    if (tokensList.length === 0) {
+      const savedTokens = localStorage.getItem('kisanh_tokens_list');
+      tokensList = savedTokens ? JSON.parse(savedTokens) : (INITIAL_TOKENS as unknown as DigitalToken[]);
+    }
+
+    setAllTokens(tokensList);
+
+    // Synchronize and restore active token on reload
+    const savedActiveRaw = localStorage.getItem('kisanh_active_token');
+    const savedActive: DigitalToken | null = savedActiveRaw ? JSON.parse(savedActiveRaw) : null;
+    const currentPhone = farmer?.phone;
+
+    const targetTokenNumber = activeToken?.tokenNumber || savedActive?.tokenNumber;
+
+    let matched: DigitalToken | undefined;
+    if (targetTokenNumber) {
+      matched = tokensList.find(t => t.tokenNumber === targetTokenNumber);
+    }
+
+    // Fallback: look up latest non-cancelled token for logged-in farmer if available
+    if (!matched && currentPhone) {
+      matched = tokensList.find(t => t.phone === currentPhone && !['COMPLETED', 'CANCELLED'].includes(t.status));
+    }
+
+    if (matched) {
+      setActiveTokenState(matched);
+      localStorage.setItem('kisanh_active_token', JSON.stringify(matched));
+    } else if (savedActive) {
+      setActiveTokenState(savedActive);
+    }
+  }, [activeToken?.tokenNumber, farmer?.phone]);
 
   // Fetch Announcements
   const fetchAnnouncements = useCallback(async () => {
@@ -557,14 +611,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.message || 'OTP verification failed');
+
+    // Wipe previous session's active tokens and token numbers
+    localStorage.removeItem('kisanh_active_token');
+    localStorage.removeItem('kisanh_my_token_numbers');
+
     setFarmer(json.data);
+
+    // Auto-select active token belonging to the new logged in farmer if exists
+    const newFarmerPhone = json.data.phone;
+    const newFarmerToken = allTokens.find(t => t.phone === newFarmerPhone && !['COMPLETED', 'CANCELLED'].includes(t.status));
+    setActiveToken(newFarmerToken || null);
+
     await fetchNotifications(json.data.phone);
     return json.data;
   };
 
-  const logoutFarmer = () => {
+  const logoutFarmer = async () => {
     setFarmer(null);
+    setActiveToken(null);
+    setViewPassToken(null);
     setNotifications([]);
+    localStorage.removeItem('kisanh_farmer');
+    localStorage.removeItem('kisanh_active_token');
+    localStorage.removeItem('kisanh_my_token_numbers');
+    try {
+      await logoutFirebaseUser();
+    } catch (e) {
+      // ignore
+    }
   };
 
   // --- Notification centre ---
@@ -727,6 +802,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         centres,
         activeToken,
+        myActiveTokens,
         allTokens,
         mspCatalog,
         announcements,

@@ -1,15 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Ticket, Scale, DollarSign, Clock, HelpCircle, Landmark } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
 export const LiveQueueTracker: React.FC = () => {
-  const { activeToken, allTokens, centres, setViewPassToken } = useApp();
+  const { activeToken, setActiveToken, myActiveTokens, allTokens, centres, setViewPassToken } = useApp();
   const { lang, t } = useLanguage();
 
   const [selectedCentreId, setSelectedCentreId] = useState<string>(
     activeToken ? activeToken.centreId : centres[0]?.id || ''
   );
+
+  useEffect(() => {
+    if (activeToken?.centreId) {
+      setSelectedCentreId(activeToken.centreId);
+    } else if (!selectedCentreId && centres.length > 0) {
+      setSelectedCentreId(centres[0].id);
+    }
+  }, [activeToken, centres, selectedCentreId]);
+
+  const handleCentreSelect = (centreId: string) => {
+    setSelectedCentreId(centreId);
+    // Auto-switch to user's active token for this centre if one exists
+    const tokenForCentre = myActiveTokens.find(t => t.centreId === centreId);
+    if (tokenForCentre) {
+      setActiveToken(tokenForCentre);
+    }
+  };
+
+  const handleTokenChipClick = (t: typeof myActiveTokens[0]) => {
+    setActiveToken(t);
+    setSelectedCentreId(t.centreId);
+  };
 
   const centre = centres.find(c => c.id === selectedCentreId) || centres[0];
   const centreTokens = allTokens.filter(t => t.centreId === selectedCentreId && t.status !== 'COMPLETED' && t.status !== 'CANCELLED');
@@ -35,6 +57,46 @@ export const LiveQueueTracker: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn">
+      {/* Multi-Token Switcher Bar if farmer has active tokens */}
+      {myActiveTokens.length > 0 && (
+        <div className="bg-[#FFFDF8] border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2 paper-bg-texture">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-agri-600" />
+              <span>Your Active Delivery Tokens ({myActiveTokens.length})</span>
+            </span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              Click a token to switch view
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {myActiveTokens.map((tok) => {
+              const isSelected = activeToken?.tokenNumber === tok.tokenNumber;
+              return (
+                <button
+                  key={tok.tokenNumber}
+                  onClick={() => handleTokenChipClick(tok)}
+                  className={`px-3.5 py-2 rounded-xl border text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-agri-700 text-white border-agri-800 shadow-md scale-[1.02]'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="font-mono font-black">{tok.tokenNumber}</span>
+                  <span className="opacity-80 text-[11px]">• {tok.centreName.split(' ')[0]}</span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-mono ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {tok.status}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Tracker Grid layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -170,7 +232,7 @@ export const LiveQueueTracker: React.FC = () => {
               </h3>
               <select
                 value={selectedCentreId}
-                onChange={(e) => setSelectedCentreId(e.target.value)}
+                onChange={(e) => handleCentreSelect(e.target.value)}
                 className="w-full mt-2 px-3 py-2.5 border-2 border-slate-200 rounded-xl bg-white font-bold text-xs focus:outline-none focus:border-agri-500 cursor-pointer"
               >
                 {centres.map(c => (

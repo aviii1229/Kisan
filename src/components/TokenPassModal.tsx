@@ -17,33 +17,41 @@ import { DigitalToken } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { generateTokenPdf } from '../utils/pdfExport';
 
+import { useApp } from '../context/AppContext';
+
 interface TokenPassModalProps {
   token: DigitalToken | null;
   onClose: () => void;
 }
 
-export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }) => {
+export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token: initialToken, onClose }) => {
   const { lang, t } = useLanguage();
+  const { myActiveTokens, setViewPassToken } = useApp();
+  const [currentToken, setCurrentToken] = useState<DigitalToken | null>(initialToken);
   const [qrUrl, setQrUrl] = useState<string>('');
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   useEffect(() => {
-    if (token) {
+    setCurrentToken(initialToken);
+  }, [initialToken]);
+
+  useEffect(() => {
+    if (currentToken) {
       const qrData = JSON.stringify({
-        token: token.tokenNumber,
-        centre: token.centreName,
-        farmer: token.farmerName,
-        crop: token.cropName,
-        qty: token.quantityQuintals,
-        slot: `${token.slotDate} ${token.slotTime}`,
-        vehicle: token.vehicleNumber
+        token: currentToken.tokenNumber,
+        centre: currentToken.centreName,
+        farmer: currentToken.farmerName,
+        crop: currentToken.cropName,
+        qty: currentToken.quantityQuintals,
+        slot: `${currentToken.slotDate} ${currentToken.slotTime}`,
+        vehicle: currentToken.vehicleNumber
       });
 
       QRCode.toDataURL(qrData, { width: 280, margin: 1 })
         .then((url) => setQrUrl(url))
         .catch((err) => console.error(err));
     }
-  }, [token]);
+  }, [currentToken]);
 
   // Safety net: Escape always closes the modal
   useEffect(() => {
@@ -54,12 +62,12 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  if (!token) return null;
+  if (!currentToken) return null;
 
   const handleDownload = async () => {
     try {
       setIsExporting(true);
-      await generateTokenPdf(token);
+      await generateTokenPdf(currentToken);
       setIsExporting(false);
     } catch (e) {
       console.error('PDF export failed:', e);
@@ -68,7 +76,7 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
   };
 
   const handleShareWhatsApp = () => {
-    const text = `🌾 *Kisan H Official Delivery Pass*\nToken: *${token.tokenNumber}*\nFarmer: ${token.farmerName}\nCentre: ${token.centreName}\nCrop: ${token.cropName} (${token.quantityQuintals} Quintals)\nSlot: ${token.slotDate} (${token.slotTime})\nVehicle: ${token.vehicleNumber}`;
+    const text = `🌾 *Kisan H Official Delivery Pass*\nToken: *${currentToken.tokenNumber}*\nFarmer: ${currentToken.farmerName}\nCentre: ${currentToken.centreName}\nCrop: ${currentToken.cropName} (${currentToken.quantityQuintals} Quintals)\nSlot: ${currentToken.slotDate} (${currentToken.slotTime})\nVehicle: ${currentToken.vehicleNumber}`;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -107,6 +115,27 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
             <p className="text-xs text-agri-100 mt-0.5 font-bold uppercase tracking-wider">
               Smart Grain Procurement Entry Authorization
             </p>
+
+            {/* Pass Selector dropdown if user has multiple active tokens */}
+            {myActiveTokens.length > 1 && (
+              <div className="mt-3 flex items-center justify-center gap-2 border-t border-white/10 pt-3">
+                <span className="text-[10px] text-agri-100 font-extrabold uppercase tracking-wider">Select Active Pass:</span>
+                <select
+                  value={currentToken.tokenNumber}
+                  onChange={(e) => {
+                    const sel = myActiveTokens.find(t => t.tokenNumber === e.target.value);
+                    if (sel) setCurrentToken(sel);
+                  }}
+                  className="bg-white/15 hover:bg-white/20 text-white font-mono font-bold text-xs px-3 py-1 rounded-xl border border-white/25 focus:outline-none cursor-pointer"
+                >
+                  {myActiveTokens.map(t => (
+                    <option key={t.tokenNumber} value={t.tokenNumber} className="bg-slate-900 text-white font-sans">
+                      {t.tokenNumber} ({t.centreName.split(' ')[0]})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Perforated tear-line between header stub and body */}
@@ -120,7 +149,7 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
                 Official Token
               </span>
               <div className="text-3xl font-black text-ink tracking-wider font-mono mt-2">
-                {token.tokenNumber}
+                {currentToken.tokenNumber}
               </div>
 
               {/* QR Code */}
@@ -147,21 +176,21 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
                   <span>Farmer Name:</span>
                 </span>
                 <span className="font-bold text-slate-900 text-sm">
-                  {token.farmerName}
+                  {currentToken.farmerName}
                 </span>
               </div>
 
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500">Mobile Phone:</span>
                 <span className="font-bold text-slate-900 font-mono">
-                  +91 {token.phone}
+                  +91 {currentToken.phone}
                 </span>
               </div>
 
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500">Procurement Centre:</span>
                 <span className="font-bold text-slate-900 text-right max-w-[220px] leading-tight">
-                  {token.centreName}
+                  {currentToken.centreName}
                 </span>
               </div>
 
@@ -171,7 +200,7 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
                   <span>Crop & Quantity:</span>
                 </span>
                 <span className="font-bold text-agri-800">
-                  {token.cropName} ({token.quantityQuintals} Quintals)
+                  {currentToken.cropName} ({currentToken.quantityQuintals} Quintals)
                 </span>
               </div>
 
@@ -181,7 +210,7 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
                   <span>Vehicle:</span>
                 </span>
                 <span className="font-bold text-slate-900 font-mono">
-                  {token.vehicleType} ({token.vehicleNumber})
+                  {currentToken.vehicleType} ({currentToken.vehicleNumber})
                 </span>
               </div>
 
@@ -191,14 +220,14 @@ export const TokenPassModal: React.FC<TokenPassModalProps> = ({ token, onClose }
                   <span>Allocated Slot:</span>
                 </span>
                 <span className="font-bold text-amber-700">
-                  {token.slotDate} | {token.slotTime}
+                  {currentToken.slotDate} | {currentToken.slotTime}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Passbook ID:</span>
                 <span className="font-bold text-slate-700 font-mono">
-                  {token.passbookNo}
+                  {currentToken.passbookNo}
                 </span>
               </div>
             </div>
