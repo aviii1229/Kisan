@@ -11,12 +11,13 @@ export default {
         // Base paper & ink — warm ledger-paper surface instead of clinical white/slate.
         paper: '#FBF6EA',
         ink: '#211A12',
+        sage: '#b5d6cc',
 
         // Primary brand — "ledger indigo", deep blue-teal of an official stamp.
         agri: {
           50: '#EFF4F2',
           100: '#DCE8E4',
-          200: '#B9D1C9',
+          200: '#b5d6cc',
           300: '#8EB4A9',
           400: '#5E9086',
           500: '#2F6E63',

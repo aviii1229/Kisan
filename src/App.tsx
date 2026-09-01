@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from './context/AppContext';
 import { useLanguage } from './context/LanguageContext';
+import { useHeaderScroll } from './hooks/useHeaderScroll';
 
 // Components
 import { Navbar } from './components/Navbar';
@@ -24,6 +25,7 @@ import { VoiceAssistantPage } from './components/VoiceAssistantPage';
 import { Landmark, Search, MapPin, Globe, Sparkles, AlertCircle, SlidersHorizontal } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const showHeader = useHeaderScroll(10);
   const {
     activeTab,
     setActiveTab,
@@ -77,13 +79,16 @@ export const App: React.FC = () => {
       {/* Top Level Sticky Header Container */}
       <header className="sticky top-0 z-50 w-full shadow-xs">
         <Navbar
+          showHeader={showHeader}
           onOpenLogin={() => setIsLoginOpen(true)}
           onOpenAdminGate={() => {
             setUserRole('admin');
             setActiveTab('admin');
           }}
         />
-        <AlertBanner />
+        <div className={`transition-transform duration-300 ease-in-out ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
+          <AlertBanner />
+        </div>
       </header>
 
       {/* Main Container */}
